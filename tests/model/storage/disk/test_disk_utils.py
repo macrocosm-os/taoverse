@@ -3,6 +3,7 @@ import os
 import shutil
 import time
 import unittest
+from tempfile import TemporaryDirectory
 
 import taoverse.model.storage.disk.utils as utils
 from taoverse.model.data import ModelId
@@ -10,26 +11,23 @@ from taoverse.model.data import ModelId
 
 class TestDiskUtils(unittest.TestCase):
     def setUp(self):
-        self.base_dir = "test-models"
         self.sep = os.path.sep
-        os.mkdir(self.base_dir)
-
-    def tearDown(self):
-        shutil.rmtree(path=self.base_dir, ignore_errors=True)
 
     def test_get_local_miners_dir(self):
-        miners_dir = utils.get_local_miners_dir(self.base_dir)
+        with TemporaryDirectory() as base_dir:
+            miners_dir = utils.get_local_miners_dir(base_dir)
 
-        expected_path = self.base_dir + self.sep + "models"
-        self.assertEqual(miners_dir, expected_path)
+            expected_path = base_dir + self.sep + "models"
+            self.assertEqual(miners_dir, expected_path)
 
     def test_get_local_miner_dir(self):
         hotkey = "test-hotkey"
 
-        miner_dir = utils.get_local_miner_dir(self.base_dir, hotkey)
+        with TemporaryDirectory() as base_dir:
+            miner_dir = utils.get_local_miner_dir(base_dir, hotkey)
 
-        expected_path = self.base_dir + self.sep + "models" + self.sep + hotkey
-        self.assertEqual(miner_dir, expected_path)
+            expected_path = base_dir + self.sep + "models" + self.sep + hotkey
+            self.assertEqual(miner_dir, expected_path)
 
     def test_get_local_model_dir(self):
         hotkey = "test-hotkey"
@@ -44,21 +42,22 @@ class TestDiskUtils(unittest.TestCase):
             competition_id=1,
         )
 
-        model_dir = utils.get_local_model_dir(self.base_dir, hotkey, model_id)
+        with TemporaryDirectory() as base_dir:
+            model_dir = utils.get_local_model_dir(base_dir, hotkey, model_id)
 
-        expected_path = (
-            self.base_dir
-            + self.sep
-            + "models"
-            + self.sep
-            + hotkey
-            + self.sep
-            + "models--"
-            + namespace
-            + "--"
-            + name
-        )
-        self.assertEqual(model_dir, expected_path)
+            expected_path = (
+                base_dir
+                + self.sep
+                + "models"
+                + self.sep
+                + hotkey
+                + self.sep
+                + "models--"
+                + namespace
+                + "--"
+                + name
+            )
+            self.assertEqual(model_dir, expected_path)
 
     def test_get_local_model_snapshot_dir(self):
         hotkey = "test-hotkey"
@@ -73,25 +72,26 @@ class TestDiskUtils(unittest.TestCase):
             competition_id=1,
         )
 
-        model_dir = utils.get_local_model_snapshot_dir(self.base_dir, hotkey, model_id)
+        with TemporaryDirectory() as base_dir:
+            model_dir = utils.get_local_model_snapshot_dir(base_dir, hotkey, model_id)
 
-        expected_path = (
-            self.base_dir
-            + self.sep
-            + "models"
-            + self.sep
-            + hotkey
-            + self.sep
-            + "models--"
-            + namespace
-            + "--"
-            + name
-            + self.sep
-            + "snapshots"
-            + self.sep
-            + commit
-        )
-        self.assertEqual(model_dir, expected_path)
+            expected_path = (
+                base_dir
+                + self.sep
+                + "models"
+                + self.sep
+                + hotkey
+                + self.sep
+                + "models--"
+                + namespace
+                + "--"
+                + name
+                + self.sep
+                + "snapshots"
+                + self.sep
+                + commit
+            )
+            self.assertEqual(model_dir, expected_path)
 
     def test_get_hf_download_path_dir(self):
         hotkey = "test-hotkey"
@@ -106,128 +106,141 @@ class TestDiskUtils(unittest.TestCase):
             competition_id=1,
         )
 
-        hf_download_path_dir = utils.get_hf_download_path(
-            utils.get_local_miner_dir(self.base_dir, hotkey), model_id
-        )
+        with TemporaryDirectory() as base_dir:
+            hf_download_path_dir = utils.get_hf_download_path(
+                utils.get_local_miner_dir(base_dir, hotkey), model_id
+            )
 
-        expected_path = (
-            self.base_dir
-            + self.sep
-            + "models"
-            + self.sep
-            + hotkey
-            + self.sep
-            + "models--"
-            + namespace
-            + "--"
-            + name
-            + self.sep
-            + "snapshots"
-            + self.sep
-            + commit
-        )
-        self.assertEqual(hf_download_path_dir, expected_path)
+            expected_path = (
+                base_dir
+                + self.sep
+                + "models"
+                + self.sep
+                + hotkey
+                + self.sep
+                + "models--"
+                + namespace
+                + "--"
+                + name
+                + self.sep
+                + "snapshots"
+                + self.sep
+                + commit
+            )
+            self.assertEqual(hf_download_path_dir, expected_path)
 
     def test_get_newest_datetime_under_path(self):
         file_name = "test.txt"
-        path = self.base_dir + os.path.sep + file_name
+        with TemporaryDirectory() as base_dir:
+            path = base_dir + os.path.sep + file_name
 
-        file = open(path, "w")
-        file.write("test text.")
-        file.close()
-
-        last_modified_expected = datetime.datetime.fromtimestamp(os.path.getmtime(path))
-
-        last_modified_actual = utils.get_newest_datetime_under_path(self.base_dir)
-
-        self.assertEqual(last_modified_actual, last_modified_expected)
-
-    def test_get_newest_datetime_under_path_empty(self):
-        last_modified_expected = datetime.datetime.max
-
-        last_modified_actual = utils.get_newest_datetime_under_path(self.base_dir)
-
-        self.assertEqual(last_modified_actual, last_modified_expected)
-
-    def test_remove_dir_out_of_grace(self):
-        file_name = "test.txt"
-        path = self.base_dir + self.sep + file_name
-
-        file = open(path, "w")
-        file.write("test text.")
-        file.close()
-
-        # Sleep to ensure we are out of grace.
-        time.sleep(1)
-
-        self.assertTrue(os.path.exists(self.base_dir))
-        deleted = utils.remove_dir_out_of_grace(self.base_dir, 0)
-        self.assertTrue(deleted)
-        self.assertFalse(os.path.exists(self.base_dir))
-
-    def test_remove_dir_out_of_grace_in_grace(self):
-        file_name = "test.txt"
-        path = self.base_dir + self.sep + file_name
-
-        file = open(path, "w")
-        file.write("test text.")
-        file.close()
-
-        self.assertTrue(os.path.exists(self.base_dir))
-        deleted = utils.remove_dir_out_of_grace(self.base_dir, 60)
-        self.assertFalse(deleted)
-        self.assertTrue(os.path.exists(self.base_dir))
-
-    def test_get_hash_of_file(self):
-        file_name = "test.txt"
-        path = self.base_dir + self.sep + file_name
-
-        file = open(path, "w")
-        file.write("test text.")
-        file.close()
-
-        # Obtained by running openssl dgst -sha256 -binary test.txt | base64
-        expected_file_hash = "tXNDvHVzqYIRiUx0rvK+M5+Lu4OLzhfPJH+gf7HvCeA="
-        actual_file_hash = utils.get_hash_of_file(path)
-
-        self.assertEqual(actual_file_hash, expected_file_hash)
-
-    def test_get_hash_of_directory(self):
-        # Make two sub directories.
-        dir_1 = self.base_dir + self.sep + "dir1"
-        dir_2 = self.base_dir + self.sep + "dir2"
-
-        # Write the same two files to both sub directories.
-        file_name_1 = "test1.txt"
-        file_name_2 = "test2.txt"
-        path_1_file_1 = dir_1 + os.path.sep + file_name_1
-        path_1_file_2 = dir_1 + os.path.sep + file_name_2
-        path_2_file_1 = dir_2 + os.path.sep + file_name_1
-        path_2_file_2 = dir_2 + os.path.sep + file_name_2
-
-        path_2_file_2 = dir_2 + os.path.sep + file_name_2
-        file_paths = [path_1_file_1, path_1_file_2, path_2_file_1, path_2_file_2]
-
-        os.mkdir(dir_1)
-        os.mkdir(dir_2)
-
-        for file_path in file_paths:
-            file = open(file_path, "w")
+            file = open(path, "w")
             file.write("test text.")
             file.close()
 
-        # Test that both sub directories have an equal hash.
-        dir_1_hash = utils.get_hash_of_directory(dir_1)
-        dir_2_hash = utils.get_hash_of_directory(dir_2)
-        self.assertEqual(dir_1_hash, dir_2_hash)
+            last_modified_expected = datetime.datetime.fromtimestamp(os.path.getmtime(path))
 
-        # Test that the hash for the overall directory does not equal the sub directory.
-        base_dir_hash = utils.get_hash_of_directory(self.base_dir)
-        self.assertNotEqual(base_dir_hash, dir_1_hash)
+            last_modified_actual = utils.get_newest_datetime_under_path(base_dir)
+
+            self.assertEqual(last_modified_actual, last_modified_expected)
+
+    def test_get_newest_datetime_under_path_empty(self):
+        last_modified_expected = datetime.datetime.max
+        
+        with TemporaryDirectory() as base_dir:
+            last_modified_actual = utils.get_newest_datetime_under_path(base_dir)
+
+            self.assertEqual(last_modified_actual, last_modified_expected)
+
+    def test_remove_dir_out_of_grace(self):
+        file_name = "test.txt"
+        with TemporaryDirectory() as base_dir:
+            path = base_dir + self.sep + file_name
+
+            file = open(path, "w")
+            file.write("test text.")
+            file.close()
+
+            # Sleep to ensure we are out of grace.
+            time.sleep(1)
+
+            self.assertTrue(os.path.exists(base_dir))
+            deleted = utils.remove_dir_out_of_grace(base_dir, 0)
+            self.assertTrue(deleted)
+            self.assertFalse(os.path.exists(base_dir))
+
+    def test_remove_dir_out_of_grace_in_grace(self):
+        file_name = "test.txt"
+        with TemporaryDirectory() as base_dir:
+            path = base_dir + self.sep + file_name
+
+            file = open(path, "w")
+            file.write("test text.")
+            file.close()
+
+            self.assertTrue(os.path.exists(base_dir))
+            deleted = utils.remove_dir_out_of_grace(base_dir, 60)
+            self.assertFalse(deleted)
+            self.assertTrue(os.path.exists(base_dir))
+
+    def test_get_hash_of_file(self):
+        file_name = "test.txt"
+        with TemporaryDirectory() as base_dir:
+            path = base_dir + self.sep + file_name
+
+            file = open(path, "w")
+            file.write("test text.")
+            file.close()
+
+            # Obtained by running openssl dgst -sha256 -binary test.txt | base64
+            expected_file_hash = "tXNDvHVzqYIRiUx0rvK+M5+Lu4OLzhfPJH+gf7HvCeA="
+            actual_file_hash = utils.get_hash_of_file(path)
+
+            self.assertEqual(actual_file_hash, expected_file_hash)
+
+    def test_get_hash_of_directory(self):
+        with TemporaryDirectory() as base_dir:
+            # Make two sub directories.
+            dir_1 = base_dir + self.sep + "dir1"
+            dir_2 = base_dir + self.sep + "dir2"
+
+            # Write the same two files to both sub directories.
+            file_name_1 = "test1.txt"
+            file_name_2 = "test2.txt"
+            path_1_file_1 = dir_1 + os.path.sep + file_name_1
+            path_1_file_2 = dir_1 + os.path.sep + file_name_2
+            path_2_file_1 = dir_2 + os.path.sep + file_name_1
+            path_2_file_2 = dir_2 + os.path.sep + file_name_2
+
+            path_2_file_2 = dir_2 + os.path.sep + file_name_2
+            file_paths = [path_1_file_1, path_1_file_2, path_2_file_1, path_2_file_2]
+
+            os.mkdir(dir_1)
+            os.mkdir(dir_2)
+
+            for file_path in file_paths:
+                file = open(file_path, "w")
+                file.write("test text.")
+                file.close()
+
+            # Test that both sub directories have an equal hash.
+            dir_1_hash = utils.get_hash_of_directory(dir_1)
+            dir_2_hash = utils.get_hash_of_directory(dir_2)
+            self.assertEqual(dir_1_hash, dir_2_hash)
+
+            # Test that the hash for the overall directory does not equal the sub directory.
+            base_dir_hash = utils.get_hash_of_directory(base_dir)
+            self.assertNotEqual(base_dir_hash, dir_1_hash)
 
     def test_realize_symlinks_in_directory(self):
-        end_file_dir = self.base_dir + self.sep + "end_files"
-        symlink_source_dir = self.base_dir + self.sep + "symlink"
+        # We can't use temporary directories because all files in the directoy are symlinks.
+        # Instead, we create our own non-temporary directory, that's deleted at the end of the test.
+        base_dir = "test-symlinks"
+        shutil.rmtree(path=base_dir, ignore_errors=True)
+        os.mkdir(base_dir)
+    
+        end_file_dir = base_dir + self.sep + "end_files"
+        symlink_source_dir = base_dir + self.sep + "symlink"
 
         regular_file = end_file_dir + self.sep + "test_file.txt"
         symlink_source = symlink_source_dir + self.sep + "symlink_source.txt"
@@ -249,7 +262,7 @@ class TestDiskUtils(unittest.TestCase):
 
         # Confirm we see 3 files
         pre_file_count = 0
-        for _, _, files in os.walk(self.base_dir):
+        for _, _, files in os.walk(base_dir):
             pre_file_count += len(files)
         self.assertEqual(pre_file_count, 3)
 
@@ -259,9 +272,11 @@ class TestDiskUtils(unittest.TestCase):
         self.assertEqual(realized_files, 1)
 
         post_file_count = 0
-        for _, _, files in os.walk(self.base_dir):
+        for _, _, files in os.walk(base_dir):
             post_file_count += len(files)
         self.assertEqual(post_file_count, 2)
+        
+        shutil.rmtree(path=base_dir, ignore_errors=True)
 
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 import time
 import unittest
 
-from taoverse.utiltiies.perf_monitor import PerfMonitor
+from taoverse.utilities.perf_monitor import PerfMonitor
 
 
 class TestPerfMonitor(unittest.TestCase):

@@ -3,8 +3,8 @@ import time
 import unittest
 from tempfile import NamedTemporaryFile
 
-from taoverse.utiltiies import utils
-from taoverse.utiltiies.utils import run_in_subprocess, run_in_thread
+from taoverse.utilities import utils
+from taoverse.utilities.utils import run_in_subprocess, run_in_thread
 
 
 class TestUtils(unittest.TestCase):

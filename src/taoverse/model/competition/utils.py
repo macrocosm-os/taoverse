@@ -4,7 +4,9 @@ from taoverse.model.competition.data import Competition
 
 
 def get_competition_for_block(
-    comp_id: int, block: int, schedule_by_block: List[Tuple[int, List[Competition]]]
+    comp_id: int,
+    block: int,
+    schedule_by_block: List[Tuple[int, List[Competition]]],
 ) -> Optional[Competition]:
     """Returns the competition for the given id at the given block, or None if it does not exist."""
     competition_schedule = get_competition_schedule_for_block(block, schedule_by_block)

@@ -9,7 +9,7 @@ from typing import Callable, Dict, List, Optional
 
 import bittensor as bt
 
-from taoverse.utiltiies import utils
+from taoverse.utilities import utils
 
 
 class MetagraphSyncer:

@@ -4,7 +4,6 @@ from typing import Tuple
 
 from taoverse.model.data import ModelId, ModelMetadata
 
-
 def validate_hf_repo_id(repo_id: str) -> Tuple[str, str]:
     """Verifies a Hugging Face repo id is valid and returns it split into namespace and name.
 

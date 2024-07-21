@@ -1,0 +1,39 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "taoverse"
+version = "0.0.1"
+authors = [
+  { name="Taovserse" },
+]
+description = "A small example package"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "bittensor",
+    "huggingface_hub",
+    "numpy",
+    "safetensors",
+    "torch",
+    "transformers",
+    "wandb",
+]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+[project.urls]
+Homepage = "https://github.com/macrocosm-os/taoverse"
+Issues = "https://github.com/macrocosm-os/taoverse/issues"

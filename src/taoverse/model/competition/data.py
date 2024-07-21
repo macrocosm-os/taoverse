@@ -1,7 +1,16 @@
 from dataclasses import dataclass, field
-from typing import Any, List, Type
+from typing import Any, List, Type, Optional
 
 from transformers import PreTrainedModel
+
+
+@dataclass
+class NormValidationConstraints:
+    "Defines the validation constriants to be checked based on model norms."
+
+    norm_eps_soft: int
+    norm_eps_soft_percent_threshold: float
+    norm_eps_hard: int
 
 
 @dataclass
@@ -25,6 +34,9 @@ class ModelConstraints:
 
     # Any additional arguments to pass to from_pretrained
     kwargs: Any = field(default_factory=dict)
+
+    # Norm validation values.
+    norm_validation_constraints: Optional[NormValidationConstraints] = None
 
 
 @dataclass

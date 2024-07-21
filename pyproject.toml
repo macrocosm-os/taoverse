@@ -6,9 +6,9 @@ build-backend = "hatchling.build"
 name = "taoverse"
 version = "0.0.1"
 authors = [
-  { name="Taovserse" },
+  { name="Taoverse" },
 ]
-description = "A small example package"
+description = "A utilities library for model training subnets."
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [

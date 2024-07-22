@@ -155,7 +155,7 @@ class ModelUpdater:
         base_model, eps_soft, eps_soft_percent_threshold, eps_hard, print_vals=False
     ) -> bool:
         """
-        Validate that parameters of a model
+        Validate that parameters of a model are below the specified epsilon limits.
 
         Parameters:
             base_model (transformers.PreTrainedModel): The base model instance.

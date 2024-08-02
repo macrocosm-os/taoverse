@@ -5,7 +5,7 @@ import bittensor as bt
 
 from taoverse.model.competition import utils as competition_utils
 from taoverse.model.competition.data import Competition, ModelConstraints
-from taoverse.model.data import Model, ModelMetadata
+from taoverse.model.data import Model, ModelMetadata, ModelId
 from taoverse.model.model_tracker import ModelTracker
 from taoverse.model.storage.local_model_store import LocalModelStore
 from taoverse.model.storage.model_metadata_store import ModelMetadataStore
@@ -46,7 +46,13 @@ class ModelUpdater:
 
         # Check that the parameter count of the model is within allowed bounds.
         parameter_size = sum(p.numel() for p in model.pt_model.parameters())
-        if parameter_size > model_constraints.max_model_parameter_size:
+        bt.logging.debug(f'Number of model parameters is {parameter_size}')
+        bt.logging.debug(f'Max parameters allowed is {model_constraints.max_model_parameter_size}')
+
+        if (
+                parameter_size > model_constraints.max_model_parameter_size
+                or parameter_size < model_constraints.min_model_parameter_size
+        ):
             return False
 
         # Make sure it's an allowed architecture.
@@ -107,8 +113,8 @@ class ModelUpdater:
         # If not we return false and will check again next time we go through the update loop.
         if curr_block - metadata.block < competition.constraints.eval_block_delay:
             bt.logging.debug(
-                f"""Sync for hotkey {hotkey} delayed as the current block: {curr_block} is not at least 
-                {competition.constraints.eval_block_delay} blocks after the upload block: {metadata.block}. 
+                f"""Sync for hotkey {hotkey} delayed as the current block: {curr_block} is not at least
+                {competition.constraints.eval_block_delay} blocks after the upload block: {metadata.block}.
                 Will automatically retry later."""
             )
             return False
@@ -133,12 +139,17 @@ class ModelUpdater:
         self.model_tracker.on_miner_model_updated(hotkey, metadata)
 
         # Check that the hash of the downloaded content matches.
-        secure_hash = get_hash_of_two_strings(model.id.hash, hotkey)
-        if secure_hash != metadata.id.secure_hash:
-            raise MinerMisconfiguredError(
-                hotkey,
-                f"Hash of content downloaded from hugging face does not match chain metadata. {metadata}",
-            )
+        if model.id.hash != metadata.id.hash:
+
+            # Check that the hash of the downloaded content matches.
+            secure_hash = get_hash_of_two_strings(model.id.hash, hotkey)
+            if secure_hash != metadata.id.secure_hash:
+                print('model hash is', model.id.hash)
+                print('secure hash is', secure_hash)
+                raise MinerMisconfiguredError(
+                    hotkey,
+                    f"Hash of content downloaded from hugging face does not match chain metadata. {metadata}",
+                )
 
         if not ModelUpdater.verify_model_satisfies_parameters(
             model, competition.constraints

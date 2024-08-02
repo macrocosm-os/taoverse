@@ -4,8 +4,10 @@ from dataclasses import replace
 from typing import Optional
 
 from huggingface_hub import HfApi
+from huggingface_hub.utils import RepositoryNotFoundError
 from transformers import AutoModelForCausalLM
 
+from taoverse.model.model_updater import MinerMisconfiguredError
 from taoverse.model.competition.data import ModelConstraints
 from taoverse.model.data import Model, ModelId
 from taoverse.model.storage.disk import utils
@@ -67,13 +69,19 @@ class HuggingFaceModelStore(RemoteModelStore):
 
         # Check ModelInfo for the size of model.safetensors file before downloading.
         api = HfApi()
-        model_info = api.model_info(
-            repo_id=repo_id,
-            revision=model_id.commit,
-            timeout=10,
-            files_metadata=True,
-            token=token,
-        )
+        try:
+            model_info = api.model_info(
+                repo_id=repo_id,
+                revision=model_id.commit,
+                timeout=10,
+                files_metadata=True,
+                token=token,
+            )
+        except RepositoryNotFoundError:
+            raise RepositoryNotFoundError(
+                f'HuggingFace repository {repo_id} with revision {model_id.commit} was not found on the hub.'
+            )
+
         size = sum(repo_file.size for repo_file in model_info.siblings)
         if size > max_size_bytes:
             raise ValueError(
@@ -81,14 +89,26 @@ class HuggingFaceModelStore(RemoteModelStore):
             )
 
         # Transformers library can pick up a model based on the hugging face path (username/model) + rev.
-        model = AutoModelForCausalLM.from_pretrained(
-            pretrained_model_name_or_path=repo_id,
-            revision=model_id.commit,
-            cache_dir=local_path,
-            use_safetensors=True,
-            token=token,
-            **model_constraints.kwargs,
-        )
+        try:
+            model = AutoModelForCausalLM.from_pretrained(
+                pretrained_model_name_or_path=repo_id,
+                revision=model_id.commit,
+                cache_dir=local_path,
+                use_safetensors=True,
+                token=token,
+                **model_constraints.kwargs,
+            )
+        except ValueError as e:
+            # This is treated as a MinerMisconfiguredError. Since the error in this case,
+            # and after the above checks, most probably comes from `kwargs` misconfigured for
+            # the type of model being loaded.
+            # For example, attempting to use FlashAttention 2.0 with GPT2 models.
+            # The latter does not support that. This is an error known for SN9 when trying
+            # to load 772M models into the default 7B when migrating to multi-competition support.
+            raise MinerMisconfiguredError(
+                f'Model {repo_id}/{model_id.commit} could not be loaded with kwargs {model_constraints.kwargs}, Here is the error trace:',
+                e
+            )
 
         # Get the directory the model was stored to.
         model_dir = utils.get_hf_download_path(local_path, model_id)

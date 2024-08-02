@@ -52,12 +52,21 @@ class ModelId:
     def from_compressed_str(cls, cs: str) -> Type["ModelId"]:
         """Returns an instance of this class from a compressed string representation"""
         tokens = cs.split(":")
-        competition_id = int(tokens[4])
+
+        # This case is for backward compatibility with SN9, 7B competition
+        # prior to multi-competition support
+        if len(tokens) < 5:
+            competition_id = 0
+            hash = tokens[3] if tokens[3] != "None" else None
+        else:
+            competition_id = int(tokens[4])
+            hash = None
 
         return cls(
             namespace=tokens[0],
             name=tokens[1],
             commit=tokens[2] if tokens[2] != "None" else None,
+            hash = hash,
             secure_hash=tokens[3] if tokens[3] != "None" else None,
             competition_id=competition_id,
         )

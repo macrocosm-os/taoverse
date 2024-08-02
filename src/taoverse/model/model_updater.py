@@ -46,13 +46,17 @@ class ModelUpdater:
 
         # Check that the parameter count of the model is within allowed bounds.
         parameter_size = sum(p.numel() for p in model.pt_model.parameters())
-        bt.logging.debug(f'Number of model parameters is {parameter_size}')
-        bt.logging.debug(f'Max parameters allowed is {model_constraints.max_model_parameter_size}')
+
+
 
         if (
                 parameter_size > model_constraints.max_model_parameter_size
                 or parameter_size < model_constraints.min_model_parameter_size
         ):
+            bt.logging.debug(f'Model {model.id.name} does not satisfy constraints for competition {model.id.competition_id}')
+            bt.logging.debug(f'Number of model parameters is {parameter_size}')
+            bt.logging.debug(f'Max parameters allowed is {model_constraints.max_model_parameter_size}')
+            bt.logging.debug(f'Min parameters allowed is {model_constraints.min_model_parameter_size}')
             return False
 
         # Make sure it's an allowed architecture.
@@ -113,8 +117,8 @@ class ModelUpdater:
         # If not we return false and will check again next time we go through the update loop.
         if curr_block - metadata.block < competition.constraints.eval_block_delay:
             bt.logging.debug(
-                f"""Sync for hotkey {hotkey} delayed as the current block: {curr_block} is not at least
-                {competition.constraints.eval_block_delay} blocks after the upload block: {metadata.block}.
+                f"""Sync for hotkey {hotkey} delayed as the current block: {curr_block} is not at least 
+                {competition.constraints.eval_block_delay} blocks after the upload block: {metadata.block}. 
                 Will automatically retry later."""
             )
             return False
@@ -139,13 +143,13 @@ class ModelUpdater:
         self.model_tracker.on_miner_model_updated(hotkey, metadata)
 
         # Check that the hash of the downloaded content matches.
+        # This is only useful for SN9's legacy competition before multi-competition support
+        # was introduced. Securing hashes was optional. In modern competitions, `hash` is
+        # always None, and only `secure_hash` is used.  
         if model.id.hash != metadata.id.hash:
-
             # Check that the hash of the downloaded content matches.
             secure_hash = get_hash_of_two_strings(model.id.hash, hotkey)
             if secure_hash != metadata.id.secure_hash:
-                print('model hash is', model.id.hash)
-                print('secure hash is', secure_hash)
                 raise MinerMisconfiguredError(
                     hotkey,
                     f"Hash of content downloaded from hugging face does not match chain metadata. {metadata}",

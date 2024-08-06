@@ -35,6 +35,9 @@ class ModelConstraints:
     # Any additional arguments to pass to from_pretrained
     kwargs: Any = field(default_factory=dict)
 
+    # The minimum parameter size allowed for models
+    min_model_parameter_size: int = 0
+
     # Norm validation values.
     norm_validation_constraints: Optional[NormValidationConstraints] = None
 

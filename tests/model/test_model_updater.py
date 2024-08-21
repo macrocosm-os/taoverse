@@ -20,6 +20,7 @@ from taoverse.model.competition.data import (
     Competition,
     ModelConstraints,
     NormValidationConstraints,
+    EpsilonDecay,
 )
 from taoverse.model.data import Model, ModelId, ModelMetadata
 from taoverse.model.model_tracker import ModelTracker
@@ -55,6 +56,9 @@ class TestModelUpdater(unittest.TestCase):
                 norm_eps_soft=200,
                 norm_eps_soft_percent_threshold=0.15,
                 norm_eps_hard=1000,
+            ),
+            epsilon_decay=EpsilonDecay(
+                starting_epsilon=0.005, ending_epsilon=0.001, decay_blocks=7200 * 7
             ),
         ),
     }

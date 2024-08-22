@@ -17,10 +17,10 @@ class NormValidationConstraints:
 class EpsilonDecay:
     """Defines the parameters related to epsilon decay for a specific competition."""
 
-    # The starting epsilon advantage for the older model.
+    # The starting epsilon advantage for the earlier model.
     starting_epsilon: float
 
-    # The ending epsilon advantage for the older model.
+    # The ending epsilon advantage for the earlier model.
     ending_epsilon: float
 
     # The number of blocks past model submission for epsilon to decay from starting to ending.

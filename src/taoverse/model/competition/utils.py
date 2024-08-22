@@ -36,7 +36,7 @@ def get_epsilon_for_earlier_model(
     """Calculates epsilon value to use for the earlier model in a comparison based on epsilon decay."""
 
     # Find the difference in blocks.
-    # In case of metagraph divergance between checking blocks and syncing models defult to 0.
+    # In case of metagraph divergance between checking blocks and syncing models default to 0.
     block_difference = max(current_block - earlier_model_block, 0)
 
     # Use a linear progression based on the decay blocks capping at complete decay.

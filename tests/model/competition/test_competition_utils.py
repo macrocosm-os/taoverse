@@ -231,6 +231,21 @@ class TestCompetitionUtils(unittest.TestCase):
 
         self.assertEqual(calculated_epsilon, epsilon_decay.ending_epsilon)
 
+    def test_get_epsilon_for_earlier_model_beyond_max_block(self):
+        epsilon_decay = EpsilonDecay(
+            starting_epsilon=0.005,
+            ending_epsilon=0.001,
+            decay_blocks=7200 * 7,
+        )
+
+        calculated_epsilon = get_epsilon_for_earlier_model(
+            current_block=7200 * 100,
+            earlier_model_block=7200,
+            epsilon_decay=epsilon_decay,
+        )
+
+        self.assertEqual(calculated_epsilon, epsilon_decay.ending_epsilon)
+
 
 if __name__ == "__main__":
     unittest.main()

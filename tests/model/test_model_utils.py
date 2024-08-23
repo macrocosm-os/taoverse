@@ -1,6 +1,7 @@
 import unittest
 
 from taoverse.model import utils
+from taoverse.model.data import ModelMetadata, ModelId
 
 
 class TestModelUtils(unittest.TestCase):
@@ -34,6 +35,38 @@ class TestModelUtils(unittest.TestCase):
         namespace, name = utils.validate_hf_repo_id("my-org/my-repo-name")
         self.assertEqual("my-org", namespace)
         self.assertEqual("my-repo-name", name)
+
+    def test_get_hf_repo(self):
+        metadata = ModelMetadata(
+            id=ModelId(
+                namespace="my-org",
+                name="my-repo-name",
+                commit="test-commit",
+                hash="test-hash",
+                secure_hash="test-secure-hash",
+                competition_id=1,
+            ),
+            block=0,
+        )
+        repo_name = utils.get_hf_repo_name(metadata)
+        self.assertEqual("my-org/my-repo-name", repo_name)
+
+    def test_get_hf_url(self):
+        metadata = ModelMetadata(
+            id=ModelId(
+                namespace="my-org",
+                name="my-repo-name",
+                commit="test-commit",
+                hash="test-hash",
+                secure_hash="test-secure-hash",
+                competition_id=1,
+            ),
+            block=0,
+        )
+        url = utils.get_hf_url(metadata)
+        self.assertEqual(
+            "https://huggingface.co/my-org/my-repo-name/tree/test-commit", url
+        )
 
 
 if __name__ == "__main__":

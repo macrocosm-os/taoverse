@@ -21,6 +21,7 @@ from taoverse.model.competition.data import (
     ModelConstraints,
     NormValidationConstraints,
 )
+from taoverse.model.competition.epsilon import FixedEpsilon
 from taoverse.model.data import Model, ModelId, ModelMetadata
 from taoverse.model.model_tracker import ModelTracker
 from taoverse.model.model_updater import MinerMisconfiguredError, ModelUpdater
@@ -56,6 +57,7 @@ class TestModelUpdater(unittest.TestCase):
                 norm_eps_soft_percent_threshold=0.15,
                 norm_eps_hard=1000,
             ),
+            epsilon_func=FixedEpsilon(0.005),
         ),
     }
 

@@ -20,8 +20,8 @@ from taoverse.model.competition.data import (
     Competition,
     ModelConstraints,
     NormValidationConstraints,
-    EpsilonDecay,
 )
+from taoverse.model.competition.epsilon import FixedEpsilon
 from taoverse.model.data import Model, ModelId, ModelMetadata
 from taoverse.model.model_tracker import ModelTracker
 from taoverse.model.model_updater import MinerMisconfiguredError, ModelUpdater
@@ -57,9 +57,7 @@ class TestModelUpdater(unittest.TestCase):
                 norm_eps_soft_percent_threshold=0.15,
                 norm_eps_hard=1000,
             ),
-            epsilon_decay=EpsilonDecay(
-                starting_epsilon=0.005, ending_epsilon=0.001, decay_blocks=7200 * 7
-            ),
+            epsilon_func=FixedEpsilon(0.005),
         ),
     }
 

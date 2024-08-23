@@ -16,12 +16,11 @@ from taoverse.model.competition.data import (
     Competition,
     ModelConstraints,
     NormValidationConstraints,
-    EpsilonDecay,
 )
+from taoverse.model.competition.epsilon import FixedEpsilon
 from taoverse.model.competition.utils import (
     get_competition_for_block,
     get_competition_schedule_for_block,
-    get_epsilon_for_earlier_model,
 )
 
 unittest.util._MAX_LENGTH = 2000
@@ -53,9 +52,7 @@ class TestCompetitionUtils(unittest.TestCase):
                 norm_eps_soft_percent_threshold=0.15,
                 norm_eps_hard=1000,
             ),
-            epsilon_decay=EpsilonDecay(
-                starting_epsilon=0.005, ending_epsilon=0.001, decay_blocks=7200 * 7
-            ),
+            epsilon_func=FixedEpsilon(0.005),
         ),
     }
 
@@ -97,9 +94,7 @@ class TestCompetitionUtils(unittest.TestCase):
                     norm_eps_soft_percent_threshold=0.15,
                     norm_eps_hard=1000,
                 ),
-                epsilon_decay=EpsilonDecay(
-                    starting_epsilon=0.005, ending_epsilon=0.001, decay_blocks=7200 * 7
-                ),
+                epsilon_func=FixedEpsilon(0.005),
             ),
             reward_percentage=1.0,
         )
@@ -151,11 +146,7 @@ class TestCompetitionUtils(unittest.TestCase):
                         norm_eps_soft_percent_threshold=0.15,
                         norm_eps_hard=1000,
                     ),
-                    epsilon_decay=EpsilonDecay(
-                        starting_epsilon=0.005,
-                        ending_epsilon=0.001,
-                        decay_blocks=7200 * 7,
-                    ),
+                    epsilon_func=FixedEpsilon(0.005),
                 ),
                 reward_percentage=1.0,
             ),
@@ -171,80 +162,6 @@ class TestCompetitionUtils(unittest.TestCase):
             _ = get_competition_schedule_for_block(
                 block=-1, schedule_by_block=self.COMPETITION_SCHEDULE_BY_BLOCK
             )
-
-    def test_get_epsilon_for_earlier_model_earlier_block(self):
-        epsilon_decay = EpsilonDecay(
-            starting_epsilon=0.005,
-            ending_epsilon=0.001,
-            decay_blocks=7200 * 7,
-        )
-
-        calculated_epsilon = get_epsilon_for_earlier_model(
-            current_block=0, earlier_model_block=7200, epsilon_decay=epsilon_decay
-        )
-
-        self.assertEqual(calculated_epsilon, epsilon_decay.starting_epsilon)
-
-    def test_get_epsilon_for_earlier_model_same_block(self):
-        epsilon_decay = EpsilonDecay(
-            starting_epsilon=0.005,
-            ending_epsilon=0.001,
-            decay_blocks=7200 * 7,
-        )
-
-        calculated_epsilon = get_epsilon_for_earlier_model(
-            current_block=7200, earlier_model_block=7200, epsilon_decay=epsilon_decay
-        )
-
-        self.assertEqual(calculated_epsilon, epsilon_decay.starting_epsilon)
-
-    def test_get_epsilon_for_earlier_model_middle_block(self):
-        epsilon_decay = EpsilonDecay(
-            starting_epsilon=0.005,
-            ending_epsilon=0.001,
-            decay_blocks=7200 * 7,
-        )
-
-        calculated_epsilon = get_epsilon_for_earlier_model(
-            current_block=epsilon_decay.decay_blocks / 2,
-            earlier_model_block=0,
-            epsilon_decay=epsilon_decay,
-        )
-
-        self.assertEqual(
-            calculated_epsilon,
-            (epsilon_decay.starting_epsilon + epsilon_decay.ending_epsilon) / 2,
-        )
-
-    def test_get_epsilon_for_earlier_model_max_block(self):
-        epsilon_decay = EpsilonDecay(
-            starting_epsilon=0.005,
-            ending_epsilon=0.001,
-            decay_blocks=7200 * 7,
-        )
-
-        calculated_epsilon = get_epsilon_for_earlier_model(
-            current_block=7200 * 8,
-            earlier_model_block=7200,
-            epsilon_decay=epsilon_decay,
-        )
-
-        self.assertEqual(calculated_epsilon, epsilon_decay.ending_epsilon)
-
-    def test_get_epsilon_for_earlier_model_beyond_max_block(self):
-        epsilon_decay = EpsilonDecay(
-            starting_epsilon=0.005,
-            ending_epsilon=0.001,
-            decay_blocks=7200 * 7,
-        )
-
-        calculated_epsilon = get_epsilon_for_earlier_model(
-            current_block=7200 * 100,
-            earlier_model_block=7200,
-            epsilon_decay=epsilon_decay,
-        )
-
-        self.assertEqual(calculated_epsilon, epsilon_decay.ending_epsilon)
 
 
 if __name__ == "__main__":

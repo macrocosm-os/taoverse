@@ -3,6 +3,8 @@ from typing import Any, List, Type, Optional
 
 from transformers import PreTrainedModel
 
+from taoverse.model.competition.epsilon import EpsilonFunc
+
 
 @dataclass
 class NormValidationConstraints:
@@ -11,20 +13,6 @@ class NormValidationConstraints:
     norm_eps_soft: int
     norm_eps_soft_percent_threshold: float
     norm_eps_hard: int
-
-
-@dataclass
-class EpsilonDecay:
-    """Defines the parameters related to epsilon decay for a specific competition."""
-
-    # The starting epsilon advantage for the earlier model.
-    starting_epsilon: float
-
-    # The ending epsilon advantage for the earlier model.
-    ending_epsilon: float
-
-    # The number of blocks past model submission for epsilon to decay from starting to ending.
-    decay_blocks: int
 
 
 @dataclass
@@ -46,6 +34,9 @@ class ModelConstraints:
     # Block delay before evaluating uploaded models. Based on look-back period for eval data collection.
     eval_block_delay: int
 
+    # The function to compute epsilon as a function of the model's submitted block and the current block.
+    epsilon_func: EpsilonFunc = field(compare=False)
+
     # Any additional arguments to pass to from_pretrained
     kwargs: Any = field(default_factory=dict)
 
@@ -54,9 +45,6 @@ class ModelConstraints:
 
     # Norm validation values.
     norm_validation_constraints: Optional[NormValidationConstraints] = None
-
-    # Epsilon decay values.
-    epsilon_decay: Optional[EpsilonDecay] = None
 
 
 @dataclass

@@ -12,7 +12,12 @@ from transformers import (
 )
 from typing import Dict, List, Tuple
 
-from taoverse.model.competition.data import Competition, ModelConstraints
+from taoverse.model.competition.data import (
+    Competition,
+    ModelConstraints,
+    NormValidationConstraints,
+)
+from taoverse.model.competition.epsilon import FixedEpsilon
 from taoverse.model.competition.utils import (
     get_competition_for_block,
     get_competition_schedule_for_block,
@@ -42,6 +47,12 @@ class TestCompetitionUtils(unittest.TestCase):
                 "torch_dtype": torch.bfloat16,
             },
             eval_block_delay=1200,  # ~4 hours.
+            norm_validation_constraints=NormValidationConstraints(
+                norm_eps_soft=200,
+                norm_eps_soft_percent_threshold=0.15,
+                norm_eps_hard=1000,
+            ),
+            epsilon_func=FixedEpsilon(0.005),
         ),
     }
 
@@ -78,6 +89,12 @@ class TestCompetitionUtils(unittest.TestCase):
                 kwargs={
                     "torch_dtype": torch.bfloat16,
                 },
+                norm_validation_constraints=NormValidationConstraints(
+                    norm_eps_soft=200,
+                    norm_eps_soft_percent_threshold=0.15,
+                    norm_eps_hard=1000,
+                ),
+                epsilon_func=FixedEpsilon(0.005),
             ),
             reward_percentage=1.0,
         )
@@ -124,6 +141,12 @@ class TestCompetitionUtils(unittest.TestCase):
                     kwargs={
                         "torch_dtype": torch.bfloat16,
                     },
+                    norm_validation_constraints=NormValidationConstraints(
+                        norm_eps_soft=200,
+                        norm_eps_soft_percent_threshold=0.15,
+                        norm_eps_hard=1000,
+                    ),
+                    epsilon_func=FixedEpsilon(0.005),
                 ),
                 reward_percentage=1.0,
             ),

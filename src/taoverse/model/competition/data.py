@@ -3,10 +3,12 @@ from typing import Any, List, Type, Optional
 
 from transformers import PreTrainedModel
 
+from taoverse.model.competition.epsilon import EpsilonFunc
+
 
 @dataclass
 class NormValidationConstraints:
-    "Defines the validation constriants to be checked based on model norms."
+    """Defines the validation constriants to be checked based on model norms."""
 
     norm_eps_soft: int
     norm_eps_soft_percent_threshold: float
@@ -31,6 +33,9 @@ class ModelConstraints:
 
     # Block delay before evaluating uploaded models. Based on look-back period for eval data collection.
     eval_block_delay: int
+
+    # The function to compute epsilon as a function of the model's submitted block and the current block.
+    epsilon_func: EpsilonFunc = field(compare=False)
 
     # Any additional arguments to pass to from_pretrained
     kwargs: Any = field(default_factory=dict)

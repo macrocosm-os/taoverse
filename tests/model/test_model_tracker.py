@@ -1,8 +1,10 @@
-from dataclasses import replace
+import math
 import os
+import random
 import unittest
+from dataclasses import replace
 
-from taoverse.model.data import ModelId, ModelMetadata
+from taoverse.model.data import EvalResult, ModelId, ModelMetadata
 from taoverse.model.model_tracker import ModelTracker
 
 
@@ -27,6 +29,18 @@ class TestModelTracker(unittest.TestCase):
 
         state_path = ".test_tracker_state.pickle"
         self.model_tracker.on_miner_model_updated(hotkey, model_metadata)
+        self.model_tracker.on_model_evaluated(
+            hotkey,
+            EvalResult(
+                block=2, avg_loss=math.inf, winning_model_block=1, winning_model_loss=2
+            ),
+        )
+        self.model_tracker.on_model_evaluated(
+            hotkey,
+            EvalResult(
+                block=3, avg_loss=0.5, winning_model_block=1, winning_model_loss=2
+            ),
+        )
         self.model_tracker.save_state(state_path)
 
         new_tracker = ModelTracker()
@@ -37,6 +51,10 @@ class TestModelTracker(unittest.TestCase):
         self.assertEqual(
             self.model_tracker.miner_hotkey_to_model_metadata_dict,
             new_tracker.miner_hotkey_to_model_metadata_dict,
+        )
+        self.assertEqual(
+            self.model_tracker.miner_hotkey_to_eval_results,
+            new_tracker.miner_hotkey_to_eval_results,
         )
 
     def test_on_miner_model_updated_add(self):
@@ -154,9 +172,89 @@ class TestModelTracker(unittest.TestCase):
         model_metadata = ModelMetadata(id=model_id, block=1)
 
         self.model_tracker.on_miner_model_updated(hotkey, model_metadata)
+        self.model_tracker.on_model_evaluated(
+            hotkey,
+            EvalResult(
+                block=2, avg_loss=1, winning_model_block=1, winning_model_loss=2
+            ),
+        )
         self.model_tracker.on_hotkeys_updated(set(["extra_hotkey"]))
 
         self.assertEqual(len(self.model_tracker.miner_hotkey_to_model_metadata_dict), 0)
+        self.assertEqual(len(self.model_tracker.miner_hotkey_to_eval_results), 0)
+
+    def test_on_model_evaluated_cleared_on_metadata_update(self):
+        hotkey = "test_hotkey"
+        model_id = self._create_model_id()
+
+        model_metadata = ModelMetadata(id=model_id, block=1)
+        self.model_tracker.on_miner_model_updated(hotkey, model_metadata)
+
+        # Record a model evaluation.
+        eval_result = EvalResult(
+            block=2, avg_loss=1, winning_model_block=1, winning_model_loss=2
+        )
+        self.model_tracker.on_model_evaluated(hotkey, eval_result)
+        self.assertEqual(
+            self.model_tracker.get_eval_results_for_miner_hotkey(hotkey), [eval_result]
+        )
+
+        # Call on_miner_model_updated with the same model_metadata. This shouldn't clear the eval results.
+        self.model_tracker.on_miner_model_updated(hotkey, model_metadata)
+        self.assertEqual(
+            self.model_tracker.get_eval_results_for_miner_hotkey(hotkey), [eval_result]
+        )
+
+        # Now update the model metadata with a new metadata. This should clear the eval results.
+        self.model_tracker.on_miner_model_updated(
+            hotkey, ModelMetadata(id=model_id, block=2)
+        )
+        self.assertEqual(
+            len(self.model_tracker.get_eval_results_for_miner_hotkey(hotkey)), 0
+        )
+
+    def test_on_model_evaluated_multiple_miners(self):
+        """Verifies that miner evaluations are stored per miner."""
+        miner1 = "miner1"
+        miner2 = "miner2"
+
+        eval_result1 = EvalResult(
+            block=1, avg_loss=1, winning_model_block=1, winning_model_loss=2
+        )
+        eval_result2 = EvalResult(
+            block=2, avg_loss=2, winning_model_block=1, winning_model_loss=2
+        )
+        self.model_tracker.on_model_evaluated(miner1, eval_result1)
+        self.model_tracker.on_model_evaluated(miner2, eval_result2)
+
+        self.assertEqual(
+            self.model_tracker.get_eval_results_for_miner_hotkey(miner1), [eval_result1]
+        )
+        self.assertEqual(
+            self.model_tracker.get_eval_results_for_miner_hotkey(miner2), [eval_result2]
+        )
+
+    def test_eval_results_are_ordered_and_truncated(self):
+        """Verifies that only 3 eval results are kept and that they're returned in block order."""
+
+        miner1 = "miner1"
+        eval_results = [
+            EvalResult(
+                block=i, avg_loss=10 - i, winning_model_block=1, winning_model_loss=2
+            )
+            for i in range(5)
+        ]
+        random.shuffle(eval_results)
+
+        # A bit unusual, but insert the evaluations in a random order.
+        # Per the API spec, this should still result in the 3 most recent being kept.
+        for eval_result in eval_results:
+            self.model_tracker.on_model_evaluated(miner1, eval_result)
+
+        expected = sorted(eval_results, key=lambda er: er.block)[-3:]
+        self.assertEqual(
+            self.model_tracker.get_eval_results_for_miner_hotkey(miner1), expected
+        )
 
 
 if __name__ == "__main__":

@@ -104,14 +104,14 @@ class EvalResult:
     # The block the model was evaluated at.
     block: int
 
-    # The average loss of this model when it was evaluated. May be math.inf if the model failed to evaluate.
-    avg_loss: float
+    # The eval score of this model when it was evaluated. May be math.inf if the model failed to evaluate.
+    score: float
 
     # The block the winning model was submitted.
     # Useful for computing when/if this model should be re-evaluated given a new epsilon.
     winning_model_block: int
 
-    # The average loss of the winning model when this model was evaluated.
-    # If this was the winning model, equal to avg_loss.
+    # The score of the winning model when this model was evaluated.
+    # If this was the winning model, equal to score.
     # May be math.inf if the model failed to evaluate.
-    winning_model_loss: float
+    winning_model_score: float

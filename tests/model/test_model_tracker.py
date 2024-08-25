@@ -32,13 +32,13 @@ class TestModelTracker(unittest.TestCase):
         self.model_tracker.on_model_evaluated(
             hotkey,
             EvalResult(
-                block=2, avg_loss=math.inf, winning_model_block=1, winning_model_loss=2
+                block=2, score=math.inf, winning_model_block=1, winning_model_score=2
             ),
         )
         self.model_tracker.on_model_evaluated(
             hotkey,
             EvalResult(
-                block=3, avg_loss=0.5, winning_model_block=1, winning_model_loss=2
+                block=3, score=0.5, winning_model_block=1, winning_model_score=2
             ),
         )
         self.model_tracker.save_state(state_path)
@@ -175,7 +175,7 @@ class TestModelTracker(unittest.TestCase):
         self.model_tracker.on_model_evaluated(
             hotkey,
             EvalResult(
-                block=2, avg_loss=1, winning_model_block=1, winning_model_loss=2
+                block=2, score=1, winning_model_block=1, winning_model_score=2
             ),
         )
         self.model_tracker.on_hotkeys_updated(set(["extra_hotkey"]))
@@ -192,7 +192,7 @@ class TestModelTracker(unittest.TestCase):
 
         # Record a model evaluation.
         eval_result = EvalResult(
-            block=2, avg_loss=1, winning_model_block=1, winning_model_loss=2
+            block=2, score=1, winning_model_block=1, winning_model_score=2
         )
         self.model_tracker.on_model_evaluated(hotkey, eval_result)
         self.assertEqual(
@@ -219,10 +219,10 @@ class TestModelTracker(unittest.TestCase):
         miner2 = "miner2"
 
         eval_result1 = EvalResult(
-            block=1, avg_loss=1, winning_model_block=1, winning_model_loss=2
+            block=1, score=1, winning_model_block=1, winning_model_score=2
         )
         eval_result2 = EvalResult(
-            block=2, avg_loss=2, winning_model_block=1, winning_model_loss=2
+            block=2, score=2, winning_model_block=1, winning_model_score=2
         )
         self.model_tracker.on_model_evaluated(miner1, eval_result1)
         self.model_tracker.on_model_evaluated(miner2, eval_result2)
@@ -240,7 +240,7 @@ class TestModelTracker(unittest.TestCase):
         miner1 = "miner1"
         eval_results = [
             EvalResult(
-                block=i, avg_loss=10 - i, winning_model_block=1, winning_model_loss=2
+                block=i, score=10 - i, winning_model_block=1, winning_model_score=2
             )
             for i in range(50)
         ]

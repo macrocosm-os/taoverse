@@ -49,7 +49,9 @@ class ModelId:
         return f"{self.namespace}:{self.name}:{self.commit}:{self.secure_hash}:{self.competition_id}"
 
     @classmethod
-    def from_compressed_str(cls, cs: str, default_competition_id: int = 0) -> Type["ModelId"]:
+    def from_compressed_str(
+        cls, cs: str, default_competition_id: int = 0
+    ) -> Type["ModelId"]:
         """Returns an instance of this class from a compressed string representation"""
         tokens = cs.split(":")
 
@@ -66,7 +68,7 @@ class ModelId:
             namespace=tokens[0],
             name=tokens[1],
             commit=tokens[2] if tokens[2] != "None" else None,
-            hash = hash,
+            hash=hash,
             secure_hash=tokens[3] if tokens[3] != "None" else None,
             competition_id=competition_id,
         )
@@ -93,3 +95,23 @@ class ModelMetadata:
 
     # Block on which this model was uploaded on the chain.
     block: int
+
+
+@dataclasses.dataclass
+class EvalResult:
+    """Records an evaluation result for a model."""
+
+    # The block the model was evaluated at.
+    block: int
+
+    # The eval score of this model when it was evaluated. May be math.inf if the model failed to evaluate.
+    score: float
+
+    # The block the winning model was submitted.
+    # Useful for computing when/if this model should be re-evaluated given a new epsilon.
+    winning_model_block: int
+
+    # The score of the winning model when this model was evaluated.
+    # If this was the winning model, equal to score.
+    # May be math.inf if the model failed to evaluate.
+    winning_model_score: float

@@ -53,6 +53,7 @@ class TestCompetitionUtils(unittest.TestCase):
                 norm_eps_hard=1000,
             ),
             epsilon_func=FixedEpsilon(0.005),
+            max_bytes=15*1024*1024*1024,  # 15 GB
         ),
     }
 
@@ -95,6 +96,7 @@ class TestCompetitionUtils(unittest.TestCase):
                     norm_eps_hard=1000,
                 ),
                 epsilon_func=FixedEpsilon(0.005),
+                max_bytes=15*1024*1024*1024,  # 15 GB
             ),
             reward_percentage=1.0,
         )
@@ -147,6 +149,7 @@ class TestCompetitionUtils(unittest.TestCase):
                         norm_eps_hard=1000,
                     ),
                     epsilon_func=FixedEpsilon(0.005),
+                    max_bytes=15*1024*1024*1024,  # 15 GB
                 ),
                 reward_percentage=1.0,
             ),

@@ -1,7 +1,7 @@
 import uuid
 from dataclasses import replace
 
-from taoverse.model.competition.data import Competition
+from taoverse.model.competition.data import ModelConstraints
 from taoverse.model.data import Model, ModelId
 from taoverse.model.storage.disk import utils
 from taoverse.model.storage.remote_model_store import RemoteModelStore
@@ -13,7 +13,9 @@ class FakeRemoteModelStore(RemoteModelStore):
     def __init__(self):
         self.remote_models = dict()
 
-    async def upload_model(self, model: Model, competition: Competition) -> ModelId:
+    async def upload_model(
+        self, model: Model, model_constraints: ModelConstraints
+    ) -> ModelId:
         """Fake uploads a model."""
 
         model_id = model.id
@@ -33,7 +35,7 @@ class FakeRemoteModelStore(RemoteModelStore):
         return model_id
 
     async def download_model(
-        self, model_id: ModelId, local_path: str, competition: Competition
+        self, model_id: ModelId, local_path: str, model_constraints: ModelConstraints
     ) -> Model:
         """Retrieves a trained model from memory."""
 

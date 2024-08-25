@@ -242,7 +242,7 @@ class TestModelTracker(unittest.TestCase):
             EvalResult(
                 block=i, avg_loss=10 - i, winning_model_block=1, winning_model_loss=2
             )
-            for i in range(5)
+            for i in range(50)
         ]
         random.shuffle(eval_results)
 

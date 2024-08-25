@@ -120,9 +120,9 @@ class ModelTracker:
         with self.lock:
             eval_results = self.miner_hotkey_to_eval_results[hotkey]
             eval_results.append(result)
+            eval_results.sort(key=lambda x: x.block)
+
             if len(eval_results) > self.max_eval_history_len:
                 eval_results.pop(0)
-
-            eval_results.sort(key=lambda x: x.block)
 
             bt.logging.trace(f"Updated eval results {hotkey}. EvalResult={result}.")

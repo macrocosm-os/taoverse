@@ -7,9 +7,9 @@ from huggingface_hub import HfApi
 from huggingface_hub.utils import RepositoryNotFoundError
 from transformers import AutoModelForCausalLM
 
-from taoverse.model.model_updater import MinerMisconfiguredError
 from taoverse.model.competition.data import ModelConstraints
 from taoverse.model.data import Model, ModelId
+from taoverse.model.model_updater import MinerMisconfiguredError
 from taoverse.model.storage.disk import utils
 from taoverse.model.storage.remote_model_store import RemoteModelStore
 
@@ -58,7 +58,6 @@ class HuggingFaceModelStore(RemoteModelStore):
         model_id: ModelId,
         local_path: str,
         model_constraints: ModelConstraints,
-        max_size_bytes: int = 15 * 1024 * 1024 * 1024,
     ) -> Model:
         """Retrieves a trained model from Hugging Face."""
         if not model_id.commit:
@@ -78,14 +77,14 @@ class HuggingFaceModelStore(RemoteModelStore):
                 token=token,
             )
         except RepositoryNotFoundError:
-            raise RepositoryNotFoundError(
-                f'HuggingFace repository {repo_id} with revision {model_id.commit} was not found on the hub.'
+            raise MinerMisconfiguredError(
+                f"HuggingFace repository {repo_id} with revision {model_id.commit} was not found on the hub."
             )
 
         size = sum(repo_file.size for repo_file in model_info.siblings)
-        if size > max_size_bytes:
-            raise ValueError(
-                f"Hugging Face repo over maximum size limit. Size {size}. Limit {max_size_bytes}."
+        if size > model_constraints.max_bytes:
+            raise MinerMisconfiguredError(
+                f"Hugging Face repo over maximum size limit. Size {size}. Limit {model_constraints.max_bytes}."
             )
 
         # Transformers library can pick up a model based on the hugging face path (username/model) + rev.
@@ -106,8 +105,8 @@ class HuggingFaceModelStore(RemoteModelStore):
             # The latter does not support that. This is an error known for SN9 when trying
             # to load 772M models into the default 7B when migrating to multi-competition support.
             raise MinerMisconfiguredError(
-                f'Model {repo_id}/{model_id.commit} could not be loaded with kwargs {model_constraints.kwargs}, Here is the error trace:',
-                e
+                f"Model {repo_id}/{model_id.commit} could not be loaded with kwargs {model_constraints.kwargs}, Here is the error trace:",
+                e,
             )
 
         # Get the directory the model was stored to.

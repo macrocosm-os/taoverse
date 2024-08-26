@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Any, List, Type, Optional
+from typing import Any, List, Optional, Type
 
 from transformers import PreTrainedModel
 
@@ -36,6 +36,9 @@ class ModelConstraints:
 
     # The function to compute epsilon as a function of the model's submitted block and the current block.
     epsilon_func: EpsilonFunc = field(compare=False)
+    
+    # The maximum size (in bytes) the model is allowed to be.
+    max_bytes: int
 
     # Any additional arguments to pass to from_pretrained
     kwargs: Any = field(default_factory=dict)
@@ -45,7 +48,6 @@ class ModelConstraints:
 
     # Norm validation values.
     norm_validation_constraints: Optional[NormValidationConstraints] = None
-
 
 @dataclass
 class Competition:

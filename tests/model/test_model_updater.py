@@ -58,6 +58,7 @@ class TestModelUpdater(unittest.TestCase):
                 norm_eps_hard=1000,
             ),
             epsilon_func=FixedEpsilon(0.005),
+            max_bytes=15*1024*1024*1024,  # 15 GB
         ),
     }
 

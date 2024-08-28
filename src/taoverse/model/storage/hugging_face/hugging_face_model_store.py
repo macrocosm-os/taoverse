@@ -78,14 +78,14 @@ class HuggingFaceModelStore(RemoteModelStore):
             )
         except RepositoryNotFoundError:
             raise MinerMisconfiguredError(
-                hotkey="",
+                hotkey="N/A",
                 message=f"HuggingFace repository {repo_id} with revision {model_id.commit} was not found on the hub.",
             )
 
         size = sum(repo_file.size for repo_file in model_info.siblings)
         if size > model_constraints.max_bytes:
             raise MinerMisconfiguredError(
-                hotkey="",
+                hotkey="N/A",
                 message=f"Hugging Face repo over maximum size limit. Size {size}. Limit {model_constraints.max_bytes}.",
             )
 
@@ -107,7 +107,7 @@ class HuggingFaceModelStore(RemoteModelStore):
             # The latter does not support that. This is an error known for SN9 when trying
             # to load 772M models into the default 7B when migrating to multi-competition support.
             raise MinerMisconfiguredError(
-                hotkey="",
+                hotkey="N/A",
                 message=f"Model {repo_id}/{model_id.commit} could not be loaded with kwargs {model_constraints.kwargs}, Here is the error trace:",
             ) from e
 

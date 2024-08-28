@@ -78,13 +78,15 @@ class HuggingFaceModelStore(RemoteModelStore):
             )
         except RepositoryNotFoundError:
             raise MinerMisconfiguredError(
-                f"HuggingFace repository {repo_id} with revision {model_id.commit} was not found on the hub."
+                hotkey="",
+                message=f"HuggingFace repository {repo_id} with revision {model_id.commit} was not found on the hub.",
             )
 
         size = sum(repo_file.size for repo_file in model_info.siblings)
         if size > model_constraints.max_bytes:
             raise MinerMisconfiguredError(
-                f"Hugging Face repo over maximum size limit. Size {size}. Limit {model_constraints.max_bytes}."
+                hotkey="",
+                message=f"Hugging Face repo over maximum size limit. Size {size}. Limit {model_constraints.max_bytes}.",
             )
 
         # Transformers library can pick up a model based on the hugging face path (username/model) + rev.
@@ -105,9 +107,9 @@ class HuggingFaceModelStore(RemoteModelStore):
             # The latter does not support that. This is an error known for SN9 when trying
             # to load 772M models into the default 7B when migrating to multi-competition support.
             raise MinerMisconfiguredError(
-                f"Model {repo_id}/{model_id.commit} could not be loaded with kwargs {model_constraints.kwargs}, Here is the error trace:",
-                e,
-            )
+                hotkey="",
+                message=f"Model {repo_id}/{model_id.commit} could not be loaded with kwargs {model_constraints.kwargs}, Here is the error trace:",
+            ) from e
 
         # Get the directory the model was stored to.
         model_dir = utils.get_hf_download_path(local_path, model_id)

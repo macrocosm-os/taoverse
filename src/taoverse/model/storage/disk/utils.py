@@ -42,7 +42,7 @@ def get_hf_download_path(local_path: str, model_id: ModelId) -> str:
 
 
 def get_newest_datetime_under_path(path: str) -> datetime.datetime:
-    newest_filetime = sys.maxsize
+    newest_filetime = 0
 
     # Check to see if any file at any level was modified more recently than the current one.
     for cur_path, dirnames, filenames in os.walk(path):
@@ -50,13 +50,13 @@ def get_newest_datetime_under_path(path: str) -> datetime.datetime:
             path = os.path.join(cur_path, filename)
             try:
                 mod_time = os.stat(path).st_mtime
-                if mod_time < newest_filetime:
+                if mod_time > newest_filetime:
                     newest_filetime = mod_time
             except:
                 pass
 
-    if newest_filetime == sys.maxsize:
-        return datetime.datetime.max
+    if newest_filetime == 0:
+        return datetime.datetime.min
 
     return datetime.datetime.fromtimestamp(newest_filetime)
 

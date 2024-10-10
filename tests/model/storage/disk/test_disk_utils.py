@@ -130,23 +130,38 @@ class TestDiskUtils(unittest.TestCase):
             self.assertEqual(hf_download_path_dir, expected_path)
 
     def test_get_newest_datetime_under_path(self):
-        file_name = "test.txt"
+        # Write two files to ensure we get the time of the most recently written one.
+        file_name1 = "test1.txt"
+        file_name2 = "test2.txt"
         with TemporaryDirectory() as base_dir:
-            path = base_dir + os.path.sep + file_name
+            path1 = base_dir + os.path.sep + file_name1
+            path2 = base_dir + os.path.sep + file_name2
 
-            file = open(path, "w")
-            file.write("test text.")
-            file.close()
+            file1 = open(path1, "w")
+            file1.write("test text 1.")
+            file1.close()
 
-            last_modified_expected = datetime.datetime.fromtimestamp(os.path.getmtime(path))
+            time.sleep(1)
 
-            last_modified_actual = utils.get_newest_datetime_under_path(base_dir)
+            file2 = open(path2, "w")
+            file2.write("test text 2.")
+            file2.close()
 
-            self.assertEqual(last_modified_actual, last_modified_expected)
+            last_modified_file1 = datetime.datetime.fromtimestamp(
+                os.path.getmtime(path1)
+            )
+            last_modified_file2 = datetime.datetime.fromtimestamp(
+                os.path.getmtime(path2)
+            )
+            last_modified_dir = utils.get_newest_datetime_under_path(base_dir)
+
+            # Confirm that the 2nd file was modified later and that this matches the newest in the directory.
+            self.assertLess(last_modified_file1, last_modified_file2)
+            self.assertEqual(last_modified_dir, last_modified_file2)
 
     def test_get_newest_datetime_under_path_empty(self):
-        last_modified_expected = datetime.datetime.max
-        
+        last_modified_expected = datetime.datetime.min
+
         with TemporaryDirectory() as base_dir:
             last_modified_actual = utils.get_newest_datetime_under_path(base_dir)
 
@@ -238,7 +253,7 @@ class TestDiskUtils(unittest.TestCase):
         base_dir = "test-symlinks"
         shutil.rmtree(path=base_dir, ignore_errors=True)
         os.mkdir(base_dir)
-    
+
         end_file_dir = base_dir + self.sep + "end_files"
         symlink_source_dir = base_dir + self.sep + "symlink"
 
@@ -275,7 +290,7 @@ class TestDiskUtils(unittest.TestCase):
         for _, _, files in os.walk(base_dir):
             post_file_count += len(files)
         self.assertEqual(post_file_count, 2)
-        
+
         shutil.rmtree(path=base_dir, ignore_errors=True)
 
 

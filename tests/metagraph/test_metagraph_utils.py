@@ -1,4 +1,5 @@
 import unittest
+import time
 from typing import List, Tuple
 from unittest import mock
 
@@ -129,6 +130,35 @@ class TestMetagraphUtils(unittest.TestCase):
                 metagraph, min_vali_stake=30, min_miner_weight_percent=0.1
             ),
             {0, 2},
+        )
+
+    def test_get_hash_of_sync_block_change_on_sync_cadence(self):
+        """Tests get_hash_of_sync_block changes on sync cadence"""
+
+        subtensor = bt.subtensor()
+        sync_cadence = 2
+
+        hash1 = utils.get_hash_of_sync_block(subtensor, sync_cadence)
+        hash2 = utils.get_hash_of_sync_block(subtensor, sync_cadence)
+
+        # Check that we get the same hash when checking again immediately.
+        self.assertEqual(hash1, hash2)
+
+        # Each block is about 12 seconds long, use 15 for buffer.
+        time.sleep(sync_cadence * 15)
+        hash3 = utils.get_hash_of_sync_block(subtensor, sync_cadence)
+
+        # Check that we get a different hash after the sync_cadence has passed.
+        self.assertNotEqual(hash1, hash3)
+
+    def test_subtensor_get_block_hash_history(self):
+        """Tests get_block_hash can go back all the way to the start"""
+
+        subtensor = bt.subtensor()
+        hash1 = subtensor.get_block_hash(1)
+
+        self.assertEqual(
+            hash1, "0xa97f42f48fddd14f4c7443b46f9961a227c9a699e60f74dd08346713ba5dcd4c"
         )
 
 

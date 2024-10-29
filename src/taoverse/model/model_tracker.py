@@ -25,7 +25,8 @@ class ModelTracker:
 
         # Create a dict from miner hotkey to model metadata.
         self.miner_hotkey_to_model_metadata_dict = dict()
-        self.miner_hotkey_to_eval_results = defaultdict(list)
+        # Sadly, a defaultdict of defaultdict is not picklable, so we have to use a regular dict.
+        self.miner_hotkey_to_eval_results = defaultdict(dict)
 
         # Make this class thread safe because it will be accessed by multiple threads.
         # One for the downloading new models loop and one for the validating models loop.
@@ -72,11 +73,28 @@ class ModelTracker:
                 return self.miner_hotkey_to_model_metadata_dict[hotkey]
             return None
 
-    def get_eval_results_for_miner_hotkey(self, hotkey: str) -> List[EvalResult]:
+    def get_eval_results_for_miner_hotkey(self, hotkey: str, competition_id: int) -> List[EvalResult]:
         """Returns the latest evaluation results for a miner, ordered by block of eval (oldest first)."""
 
         with self.lock:
-            return copy.deepcopy(self.miner_hotkey_to_eval_results[hotkey])
+            return copy.deepcopy(self.miner_hotkey_to_eval_results[hotkey].get(competition_id, []))
+        
+    def get_block_last_evaluated(self, hotkey: str) -> Optional[int]:
+        """Returns the block of the most recent evaluation for a miner, across all competitions.
+        
+        Args:
+            hotkey (str): The miner's hotkey.
+            
+        Returns:
+            Optional[int]: The block of the most recent evaluation for the miner, or None if no evaluations have been made.
+        """
+
+        with self.lock:
+            eval_blocks = [
+                eval_result.block for eval_results in self.miner_hotkey_to_eval_results[hotkey].values()
+                for eval_result in eval_results
+            ]
+            return sorted(eval_blocks)[-1] if eval_blocks else None
 
     def on_hotkeys_updated(self, incoming_hotkeys: Set[str]):
         """Notifies the tracker which hotkeys are currently being tracked on the metagraph."""
@@ -110,19 +128,21 @@ class ModelTracker:
 
             bt.logging.trace(f"Updated Miner {hotkey}. ModelMetadata={model_metadata}.")
 
-    def on_model_evaluated(self, hotkey: str, result: EvalResult) -> None:
+    def on_model_evaluated(self, hotkey: str, competition_id: int, result: EvalResult) -> None:
         """Notifies the tracker that a model has been evaluated.
 
         Args:
             hotkey (str): The miner's hotkey.
+            competition_id (int): The competition id for this eval result.
             result (EvalResult): The evaluation result.
         """
         with self.lock:
-            eval_results = self.miner_hotkey_to_eval_results[hotkey]
+            eval_results = self.miner_hotkey_to_eval_results[hotkey].get(competition_id, [])
             eval_results.append(result)
             eval_results.sort(key=lambda x: x.block)
 
             if len(eval_results) > self.max_eval_history_len:
                 eval_results.pop(0)
+            self.miner_hotkey_to_eval_results[hotkey][competition_id] = eval_results
 
-            bt.logging.trace(f"Updated eval results {hotkey}. EvalResult={result}.")
+            bt.logging.trace(f"Updated eval results on {hotkey} for comp {competition_id}. EvalResult={result}.")

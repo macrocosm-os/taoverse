@@ -31,12 +31,14 @@ class TestModelTracker(unittest.TestCase):
         self.model_tracker.on_miner_model_updated(hotkey, model_metadata)
         self.model_tracker.on_model_evaluated(
             hotkey,
+            1,
             EvalResult(
                 block=2, score=math.inf, winning_model_block=1, winning_model_score=2
             ),
         )
         self.model_tracker.on_model_evaluated(
             hotkey,
+            1,
             EvalResult(
                 block=3, score=0.5, winning_model_block=1, winning_model_score=2
             ),
@@ -174,9 +176,8 @@ class TestModelTracker(unittest.TestCase):
         self.model_tracker.on_miner_model_updated(hotkey, model_metadata)
         self.model_tracker.on_model_evaluated(
             hotkey,
-            EvalResult(
-                block=2, score=1, winning_model_block=1, winning_model_score=2
-            ),
+            1,
+            EvalResult(block=2, score=1, winning_model_block=1, winning_model_score=2),
         )
         self.model_tracker.on_hotkeys_updated(set(["extra_hotkey"]))
 
@@ -194,15 +195,17 @@ class TestModelTracker(unittest.TestCase):
         eval_result = EvalResult(
             block=2, score=1, winning_model_block=1, winning_model_score=2
         )
-        self.model_tracker.on_model_evaluated(hotkey, eval_result)
+        self.model_tracker.on_model_evaluated(hotkey, 1, eval_result)
         self.assertEqual(
-            self.model_tracker.get_eval_results_for_miner_hotkey(hotkey), [eval_result]
+            self.model_tracker.get_eval_results_for_miner_hotkey(hotkey, 1),
+            [eval_result],
         )
 
         # Call on_miner_model_updated with the same model_metadata. This shouldn't clear the eval results.
         self.model_tracker.on_miner_model_updated(hotkey, model_metadata)
         self.assertEqual(
-            self.model_tracker.get_eval_results_for_miner_hotkey(hotkey), [eval_result]
+            self.model_tracker.get_eval_results_for_miner_hotkey(hotkey, 1),
+            [eval_result],
         )
 
         # Now update the model metadata with a new metadata. This should clear the eval results.
@@ -210,7 +213,7 @@ class TestModelTracker(unittest.TestCase):
             hotkey, ModelMetadata(id=model_id, block=2)
         )
         self.assertEqual(
-            len(self.model_tracker.get_eval_results_for_miner_hotkey(hotkey)), 0
+            len(self.model_tracker.get_eval_results_for_miner_hotkey(hotkey, 1)), 0
         )
 
     def test_on_model_evaluated_multiple_miners(self):
@@ -224,14 +227,36 @@ class TestModelTracker(unittest.TestCase):
         eval_result2 = EvalResult(
             block=2, score=2, winning_model_block=1, winning_model_score=2
         )
-        self.model_tracker.on_model_evaluated(miner1, eval_result1)
-        self.model_tracker.on_model_evaluated(miner2, eval_result2)
+        self.model_tracker.on_model_evaluated(miner1, 1, eval_result1)
+        self.model_tracker.on_model_evaluated(miner2, 1, eval_result2)
 
         self.assertEqual(
-            self.model_tracker.get_eval_results_for_miner_hotkey(miner1), [eval_result1]
+            self.model_tracker.get_eval_results_for_miner_hotkey(miner1, 1),
+            [eval_result1],
         )
         self.assertEqual(
-            self.model_tracker.get_eval_results_for_miner_hotkey(miner2), [eval_result2]
+            self.model_tracker.get_eval_results_for_miner_hotkey(miner2, 1),
+            [eval_result2],
+        )
+
+    def test_on_model_evaluated_respects_competition_id(self):
+        """Verifies that miner evaluations are stored per competition."""
+
+        eval_result1 = EvalResult(
+            block=1, score=1, winning_model_block=1, winning_model_score=2
+        )
+        eval_result2 = EvalResult(
+            block=2, score=2, winning_model_block=1, winning_model_score=2
+        )
+        self.model_tracker.on_model_evaluated("miner", 1, eval_result1)
+        self.model_tracker.on_model_evaluated("miner", 1, eval_result2)
+
+        self.assertEqual(
+            self.model_tracker.get_eval_results_for_miner_hotkey("miner", 1),
+            [eval_result1, eval_result2],
+        )
+        self.assertEqual(
+            self.model_tracker.get_eval_results_for_miner_hotkey("miner", 2), []
         )
 
     def test_eval_results_are_ordered_and_truncated(self):
@@ -249,12 +274,50 @@ class TestModelTracker(unittest.TestCase):
         # A bit unusual, but insert the evaluations in a random order.
         # Per the API spec, this should still result in the 3 most recent being kept.
         for eval_result in eval_results:
-            self.model_tracker.on_model_evaluated(miner1, eval_result)
+            self.model_tracker.on_model_evaluated(miner1, 1, eval_result)
 
         expected = sorted(eval_results, key=lambda er: er.block)[-3:]
         self.assertEqual(
-            self.model_tracker.get_eval_results_for_miner_hotkey(miner1), expected
+            self.model_tracker.get_eval_results_for_miner_hotkey(miner1, 1), expected
         )
+
+    def test_get_block_last_evaluated(self):
+        hotkey = "hotkey"
+
+        # 1. Check we get an empty result when no evals have been performed
+        self.assertIsNone(self.model_tracker.get_block_last_evaluated(hotkey))
+
+        # 2. Check we get the correct block when a single competition has been evaluated
+        self.model_tracker.on_model_evaluated(
+            hotkey,
+            1,
+            EvalResult(block=2, score=2, winning_model_block=1, winning_model_score=2),
+        )
+        self.assertEqual(self.model_tracker.get_block_last_evaluated(hotkey), 2)
+
+        # 3. Now add another competition eval at an older block and check we still get the right result.
+        self.model_tracker.on_model_evaluated(
+            hotkey,
+            2,
+            EvalResult(block=1, score=1, winning_model_block=1, winning_model_score=2),
+        )
+        self.assertEqual(self.model_tracker.get_block_last_evaluated(hotkey), 2)
+
+        # 4. Evaluate again on the new competition at a newer block.
+        self.model_tracker.on_model_evaluated(
+            hotkey,
+            2,
+            EvalResult(block=3, score=3, winning_model_block=1, winning_model_score=2),
+        )
+        self.assertEqual(self.model_tracker.get_block_last_evaluated(hotkey), 3)
+
+        # 5. Finally, add another eval for the first competition.
+        self.model_tracker.on_model_evaluated(
+            hotkey,
+            1,
+            EvalResult(block=5, score=4, winning_model_block=1, winning_model_score=2),
+        )
+        self.assertEqual(self.model_tracker.get_block_last_evaluated(hotkey), 5)
 
 
 if __name__ == "__main__":

@@ -26,7 +26,8 @@ class ModelTracker:
         # Create a dict from miner hotkey to model metadata.
         self.miner_hotkey_to_model_metadata_dict = dict()
         # Sadly, a defaultdict of defaultdict is not picklable, so we have to use a regular dict.
-        self.miner_hotkey_to_eval_results = defaultdict(dict)
+        # This dictionary is a map from hotkey to competition id to a list of eval results.
+        self.miner_hotkey_to_eval_results: Dict[Dict[str, List[EvalResult]]] = defaultdict(dict)
 
         # Make this class thread safe because it will be accessed by multiple threads.
         # One for the downloading new models loop and one for the validating models loop.

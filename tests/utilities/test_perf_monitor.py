@@ -66,6 +66,11 @@ class TestPerfMonitor(unittest.TestCase):
             [1_000_000_000, 2_000_000_000, 3_000_000_000, 4_000_000_000]
         )
         self.assertEqual(tracker.percentile(90), 3.7)
+        
+    def test_perf_monitor_name(self):
+        """Performs basic validation of the name method."""
+        tracker = PerfMonitor("TestName")
+        self.assertEqual(tracker.name(), "TestName")
 
 
 if __name__ == "__main__":

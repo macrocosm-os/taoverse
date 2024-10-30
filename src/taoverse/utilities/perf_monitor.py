@@ -30,11 +30,15 @@ class PerfMonitor:
     """
 
     def __init__(self, name):
-        self.name = name
+        self._name = name
         self.samples = []
 
     def set_samples_for_testing(self, samples):
         self.samples = samples
+        
+    def name(self) -> str:
+        """Returns the name of the operation being tracked."""
+        return self._name
 
     def sample(self) -> PerfSample:
         """Returns a context manager that will record the duration of the block it wraps."""
@@ -59,12 +63,12 @@ class PerfMonitor:
     def summary_str(self) -> str:
         """Returns a string summarizing the performance of the tracked operation."""
         if not self.samples:
-            return f"{self.name} performance: N=0"
+            return f"{self._name} performance: N=0"
 
         durations_ns = np.array(self.samples)
 
         return (
-            f"{self.name} performance: N={len(durations_ns)} | "
+            f"{self._name} performance: N={len(durations_ns)} | "
             + f"Min={self._format_duration(np.min(durations_ns))} | "
             + f"Max={self._format_duration(np.max(durations_ns))} | "
             + f"Median={self._format_duration(np.median(durations_ns))} | "

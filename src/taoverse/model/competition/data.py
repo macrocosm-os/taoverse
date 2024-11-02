@@ -5,7 +5,7 @@ from typing import Any, List, Optional, Type
 from transformers import PreTrainedModel
 
 from taoverse.model.competition.epsilon import EpsilonFunc
-from taoverse.model.competition.eval import EvalTask
+from taoverse.model.eval.task import EvalTask
 
 
 @dataclass

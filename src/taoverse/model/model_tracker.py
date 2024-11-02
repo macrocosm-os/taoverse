@@ -80,6 +80,14 @@ class ModelTracker:
         with self.lock:
             return copy.deepcopy(self.miner_hotkey_to_eval_results[hotkey].get(competition_id, []))
         
+    def clear_eval_results(self, competition_id: int) -> None:
+        """Clears all evaluation results for a given competition id."""
+        
+        with self.lock:
+            for eval_results in self.miner_hotkey_to_eval_results.values():
+                if competition_id in eval_results:
+                    del eval_results[competition_id]
+        
     def get_block_last_evaluated(self, hotkey: str) -> Optional[int]:
         """Returns the block of the most recent evaluation for a miner, across all competitions.
         

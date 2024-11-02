@@ -1,9 +1,11 @@
 from dataclasses import dataclass, field
+import dataclasses
 from typing import Any, List, Optional, Type
 
 from transformers import PreTrainedModel
 
 from taoverse.model.competition.epsilon import EpsilonFunc
+from taoverse.model.eval.task import EvalTask
 
 
 @dataclass
@@ -36,7 +38,7 @@ class ModelConstraints:
 
     # The function to compute epsilon as a function of the model's submitted block and the current block.
     epsilon_func: EpsilonFunc = field(compare=False)
-    
+
     # The maximum size (in bytes) the model is allowed to be.
     max_bytes: int
 
@@ -48,6 +50,7 @@ class ModelConstraints:
 
     # Norm validation values.
     norm_validation_constraints: Optional[NormValidationConstraints] = None
+
 
 @dataclass
 class Competition:
@@ -62,3 +65,6 @@ class Competition:
 
     # Percentage of emissions dedicated to this competition.
     reward_percentage: float
+
+    # The set of tasks used to evaluate models in this competition.
+    eval_tasks: List[EvalTask] = dataclasses.field(default_factory=list)

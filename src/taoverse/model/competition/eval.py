@@ -12,15 +12,15 @@ class EvalTask:
     
     # The identifier of the dataset to evaluate on.
     dataset_id: int
-    
-    # Additional keyword arguments to pass to the dataset loader.
-    dataset_kwargs: dict = dataclasses.field(default_factory=dict)
 
     # The identifier of the normalization method to use.
     normalization_id: int
 
     # Additional keyword arguments to pass to the normalization method.
     normalization_kwargs: dict = dataclasses.field(default_factory=dict)
+    
+    # Additional keyword arguments to pass to the dataset loader.
+    dataset_kwargs: dict = dataclasses.field(default_factory=dict)
 
     # Weight to apply to the normalized score to provide relative weight against other EvalTasks.
     weight: float = 1.0

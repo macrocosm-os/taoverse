@@ -319,6 +319,46 @@ class TestModelTracker(unittest.TestCase):
         )
         self.assertEqual(self.model_tracker.get_block_last_evaluated(hotkey), 5)
 
+    def test_clear_eval_results_missing_comp(self):
+        """Verifies that clear_eval_results doesn't crash when the competition doesn't exist."""
+        
+        eval_result1 = EvalResult(
+            block=1, score=1, winning_model_block=1, winning_model_score=2
+        )
+        eval_result2 = EvalResult(
+            block=2, score=2, winning_model_block=1, winning_model_score=2
+        )
+        self.model_tracker.on_model_evaluated("miner", 1, eval_result1)
+        self.model_tracker.on_model_evaluated("miner", 1, eval_result2)
+
+        self.model_tracker.clear_eval_results(2)
+
+        self.assertEqual(
+            self.model_tracker.get_eval_results_for_miner_hotkey("miner", 1),
+            [eval_result1, eval_result2],
+        )
+
+    def test_clear_eval_results(self):
+        """Verifies that clear_eval_results only deletes results from the right competition."""
+
+        eval_result1 = EvalResult(
+            block=1, score=1, winning_model_block=1, winning_model_score=2
+        )
+        eval_result2 = EvalResult(
+            block=2, score=2, winning_model_block=1, winning_model_score=2
+        )
+        self.model_tracker.on_model_evaluated("miner", 1, eval_result1)
+        self.model_tracker.on_model_evaluated("miner", 1, eval_result1)
+        self.model_tracker.on_model_evaluated("miner", 2, eval_result2)
+
+        self.assertEqual(
+            self.model_tracker.get_eval_results_for_miner_hotkey("miner", 1),
+            [eval_result1, eval_result1],
+        )
+        self.model_tracker.clear_eval_results(1)
+        self.assertEqual(
+            self.model_tracker.get_eval_results_for_miner_hotkey("miner", 1), []
+        )
 
 if __name__ == "__main__":
     unittest.main()

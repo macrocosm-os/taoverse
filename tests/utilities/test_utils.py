@@ -1,10 +1,22 @@
+import dataclasses
 import functools
 import time
 import unittest
 from tempfile import NamedTemporaryFile
 
+from numpy import str_
+
 from taoverse.utilities import utils
 from taoverse.utilities.utils import run_in_subprocess, run_in_thread
+
+
+@dataclasses.dataclass
+class SimpleObject:
+    int_field: int
+    bool_field: bool
+    str_field: str
+    list_field: list
+    dict_field: dict
 
 
 class TestUtils(unittest.TestCase):
@@ -107,6 +119,23 @@ class TestUtils(unittest.TestCase):
 
             utils.save_version(f.name, version)
             self.assertEqual(utils.get_version(f.name), version)
+
+    def test_fingerprint_single_object(self):
+        a = SimpleObject(1, True, "hello", [1, 2, 3], {"a": 1, "b": 2})
+        self.assertEqual(utils.fingerprint(a), utils.fingerprint(a))
+
+        b = SimpleObject(1, True, "other", [1, 2, 3], {"a": 1, "b": 2})
+        self.assertNotEqual(utils.fingerprint(a), utils.fingerprint(b))
+
+    def test_fingerprint_multiple_objects(self):
+        a = SimpleObject(1, True, "hello", [1, 2, 3], {"a": 1, "b": 2})
+        b = SimpleObject(1, True, "other", [1, 2, 3], {"a": 1, "b": 2})
+
+        self.assertEqual(utils.fingerprint([a, b]), utils.fingerprint([a, b]))
+        self.assertEqual(utils.fingerprint([a]), utils.fingerprint([a]))
+
+        self.assertNotEqual(utils.fingerprint([a]), utils.fingerprint([b]))
+        self.assertNotEqual(utils.fingerprint([a, b]), utils.fingerprint([b, a]))
 
 
 if __name__ == "__main__":

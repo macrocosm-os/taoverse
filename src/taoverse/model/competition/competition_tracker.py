@@ -2,6 +2,7 @@ import typing
 
 import bittensor as bt
 import torch
+
 from taoverse.model.competition.data import Competition
 
 
@@ -127,7 +128,6 @@ class CompetitionTracker:
             {
                 "weights_by_competition": self.weights_by_competition,
                 "num_neurons": self.num_neurons,
-                "alpha": self.alpha,
             },
             filepath,
         )
@@ -137,4 +137,3 @@ class CompetitionTracker:
         state = torch.load(filepath)
         self.weights_by_competition = state["weights_by_competition"]
         self.num_neurons = state["num_neurons"]
-        self.alpha = state["alpha"]

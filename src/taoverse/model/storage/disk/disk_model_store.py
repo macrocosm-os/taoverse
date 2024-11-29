@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any, Dict
 
 import bittensor as bt
-from transformers import AutoModelForCausalLM
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from taoverse.model.data import Model, ModelId
 from taoverse.model.storage.disk import utils
@@ -36,6 +36,14 @@ class DiskModelStore(LocalModelStore):
             safe_serialization=True,
         )
 
+        # If the model has a tokenizer also save that.
+        if model.tokenizer is not None:
+            model.tokenizer.save_pretrained(
+                save_directory=save_directory,
+                revision=model.id.commit,
+                safe_serialization=True,
+            )
+
         # Return the same model id used as we do not edit the commit information.
         return model.id
 
@@ -56,7 +64,20 @@ class DiskModelStore(LocalModelStore):
             **kwargs,
         )
 
-        return Model(id=model_id, pt_model=model)
+        # Always try to retrieve a tokenizer from the model directory. If we do not find one leave it None on the Model.
+        tokenizer = None
+        try:
+            # Do not use the kwargs for the model load here. If needed in the future a separate kwargs can be plumbed.
+            tokenizer = AutoTokenizer.from_pretrained(
+                pretrained_model_name_or_path=pretrained_model_name_or_path,
+                revision=model_id.commit,
+                local_files_only=True,
+                use_safetensors=True,
+            )
+        except Exception:
+            pass
+
+        return Model(id=model_id, pt_model=model, tokenizer=tokenizer)
 
     def delete_unreferenced_models(
         self, valid_models_by_hotkey: Dict[str, ModelId], grace_period_seconds: int

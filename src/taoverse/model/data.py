@@ -1,7 +1,7 @@
 import dataclasses
 from typing import ClassVar, Optional, Type
 
-from transformers import PreTrainedModel
+from transformers import PreTrainedModel, AutoTokenizer
 
 # The maximum bytes for metadata on the chain.
 MAX_METADATA_BYTES = 128
@@ -86,6 +86,9 @@ class Model:
 
     # PreTrainedModel.base_model returns torch.nn.Module if needed.
     pt_model: PreTrainedModel
+
+    # Tokenizer to use with this model.
+    tokenizer: Optional[AutoTokenizer] = None
 
 
 @dataclasses.dataclass

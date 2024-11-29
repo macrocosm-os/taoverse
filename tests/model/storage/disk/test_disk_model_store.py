@@ -1,5 +1,7 @@
 import unittest
 
+from transformers import AutoTokenizer
+
 import taoverse.model.storage.disk.utils as utils
 from taoverse.model.data import Model, ModelId
 from taoverse.model.storage.disk.disk_model_store import DiskModelStore
@@ -43,6 +45,33 @@ class TestDiskModelStore(unittest.TestCase):
 
         # Retrieve the model locally.
         retrieved_model = self.disk_store.retrieve_model(hotkey, model_id, kwargs={})
+
+        # Check that they match.
+        self.assertEqual(str(model), str(retrieved_model))
+
+    def test_store_and_retrieve_model_with_tokenizer(self):
+        hotkey = "hotkeyTok"
+        model_id = ModelId(
+            namespace="TestPathTok",
+            name="TestModelTok",
+            competition_id=1,
+            secure_hash="TestHash1Tok",
+            commit="TestCommitTok",
+        )
+
+        pt_model = self.tiny_model
+        tokenizer = AutoTokenizer.from_pretrained("Xenova/gpt-4")
+
+        model = Model(id=model_id, pt_model=pt_model, tokenizer=tokenizer)
+
+        # Store the model locally.
+        self.disk_store.store_model(hotkey, model)
+
+        # Retrieve the model locally.
+        retrieved_model = self.disk_store.retrieve_model(hotkey, model_id, kwargs={})
+
+        # Overwrite the name of the tokenizer to avoid it using the local path.
+        retrieved_model.tokenizer.name_or_path = "Xenova/gpt-4"
 
         # Check that they match.
         self.assertEqual(str(model), str(retrieved_model))

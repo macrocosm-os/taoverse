@@ -3,9 +3,10 @@ import tempfile
 from dataclasses import replace
 from typing import Optional
 
+import bittensor as bt
 from huggingface_hub import HfApi
 from huggingface_hub.utils import RepositoryNotFoundError
-from transformers import AutoModelForCausalLM
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from taoverse.model.competition.data import ModelConstraints
 from taoverse.model.data import Model, ModelId
@@ -41,6 +42,15 @@ class HuggingFaceModelStore(RemoteModelStore):
             safe_serialization=True,
             private=True,
         )
+
+        # If the model has a tokenizer, then also upload that and use the later commit info.
+        if model.tokenizer is not None:
+            commit_info = model.tokenizer.push_to_hub(
+                repo_id=model.id.namespace + "/" + model.id.name,
+                token=token,
+                safe_serialization=True,
+                private=True,
+            )
 
         model_id_with_commit = replace(model.id, commit=commit_info.oid)
 
@@ -111,6 +121,20 @@ class HuggingFaceModelStore(RemoteModelStore):
                 message=f"Model {repo_id}/{model_id.commit} could not be loaded with kwargs {model_constraints.kwargs}, Here is the error trace:",
             ) from e
 
+        # Always try to download a tokenizer from the model directory. If we do not find one leave it None on the Model.
+        tokenizer = None
+        try:
+            # Do not use the kwargs for the model load here. If needed in the future a separate kwargs can be plumbed.
+            tokenizer = AutoTokenizer.from_pretrained(
+                pretrained_model_name_or_path=repo_id,
+                revision=model_id.commit,
+                cache_dir=local_path,
+                use_safetensors=True,
+                token=token,
+            )
+        except OSError:
+            pass
+
         # Get the directory the model was stored to.
         model_dir = utils.get_hf_download_path(local_path, model_id)
 
@@ -121,4 +145,4 @@ class HuggingFaceModelStore(RemoteModelStore):
         model_hash = utils.get_hash_of_directory(model_dir)
         model_id_with_hash = replace(model_id, hash=model_hash)
 
-        return Model(id=model_id_with_hash, pt_model=model)
+        return Model(id=model_id_with_hash, pt_model=model, tokenizer=tokenizer)

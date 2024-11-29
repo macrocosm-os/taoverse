@@ -132,7 +132,7 @@ class HuggingFaceModelStore(RemoteModelStore):
                 use_safetensors=True,
                 token=token,
             )
-        except OSError:
+        except Exception:
             pass
 
         # Get the directory the model was stored to.

@@ -74,7 +74,7 @@ class DiskModelStore(LocalModelStore):
                 local_files_only=True,
                 use_safetensors=True,
             )
-        except OSError:
+        except Exception:
             pass
 
         return Model(id=model_id, pt_model=model, tokenizer=tokenizer)

@@ -60,12 +60,15 @@ class CompetitionTracker:
                 del self.weights_by_competition[key]
 
     def get_subnet_weights(
-        self, competitions: typing.List[Competition]
+        self,
+        competitions: typing.List[Competition],
+        min_comp_weight_threshold: float = 0.0,
     ) -> torch.Tensor:
         """Gets the weights that should be set on the subnet level based on all competitions.
 
         Args:
             competitions (typing.List[Competition]): Competitions to calculate weights across.
+            min_comp_weight_threshold (float): Competition weights below this threshold will be dropped.
 
         Returns:
             torch.Tensor: Weights calculated across all specified competitions.
@@ -78,6 +81,16 @@ class CompetitionTracker:
         for competition in competitions:
             if competition.id in self.weights_by_competition:
                 comp_weights = self.weights_by_competition[competition.id]
+                # If we were provided a threshold under which to 0 out weights then do so.
+                if min_comp_weight_threshold > 0:
+                    # Normalize competition weight here to be safe although they should already be normalized.
+                    comp_weights /= comp_weights.sum()
+                    comp_weights = comp_weights.nan_to_num(0.0)
+                    # Drop weights below the threshold.
+                    comp_weights[comp_weights < min_comp_weight_threshold] = 0.0
+                    # Normalize again because not all competitions will have any dropped weights.
+                    comp_weights /= comp_weights.sum()
+                    comp_weights = comp_weights.nan_to_num(0.0)
                 for i in range(self.num_neurons):
                     # Today uids can only participate in one competition so += and = would be equivalent.
                     subnet_weights[i] += comp_weights[i] * competition.reward_percentage

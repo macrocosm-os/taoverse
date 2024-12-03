@@ -60,7 +60,6 @@ class ChainModelMetadataStore(ModelMetadataStore):
             self.subnet_uid,
             hotkey,
         )
-        print("About to run in subprocess")
         metadata = utils.run_in_subprocess(partial, 30)
 
         if not metadata:

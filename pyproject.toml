@@ -12,7 +12,7 @@ description = "A utilities library for model training subnets."
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
-    "bittensor >= 8.0.0",
+    "bittensor >= 8.4.3",
     "huggingface_hub",
     "numpy",
     "safetensors",

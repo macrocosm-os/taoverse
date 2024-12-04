@@ -37,7 +37,7 @@ class ChainModelMetadataStore(ModelMetadataStore):
 
         data = model_id.to_compressed_str()
 
-        # Wrap calls to the subtensor in a subprocess with a timeout to handle potential hangs.
+        # Wrap calls to the subtensor in a thread with a timeout to handle potential hangs.
         partial = functools.partial(
             bt.core.extrinsics.serving.publish_metadata,
             self.subtensor,
@@ -48,19 +48,19 @@ class ChainModelMetadataStore(ModelMetadataStore):
             wait_for_inclusion,
             wait_for_finalization,
         )
-        utils.run_in_subprocess(partial, 30)
+        utils.run_in_thread(partial, 30)
 
     async def retrieve_model_metadata(self, hotkey: str) -> Optional[ModelMetadata]:
         """Retrieves model metadata on this subnet for specific hotkey"""
 
-        # Wrap calls to the subtensor in a subprocess with a timeout to handle potential hangs.
+        # Wrap calls to the subtensor in a thread with a timeout to handle potential hangs.
         partial = functools.partial(
             bt.core.extrinsics.serving.get_metadata,
             self.subtensor,
             self.subnet_uid,
             hotkey,
         )
-        metadata = utils.run_in_subprocess(partial, 30)
+        metadata = utils.run_in_thread(partial, 30)
 
         if not metadata:
             return None

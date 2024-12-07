@@ -5,6 +5,7 @@ from typing import Optional
 
 import bittensor as bt
 
+import taoverse.utilities.logging as logging
 from taoverse.model.data import ModelId, ModelMetadata
 from taoverse.model.storage.model_metadata_store import ModelMetadataStore
 from taoverse.utilities import utils
@@ -76,7 +77,7 @@ class ChainModelMetadataStore(ModelMetadataStore):
             model_id = ModelId.from_compressed_str(chain_str)
         except:
             # If the metadata format is not correct on the chain then we return None.
-            bt.logging.trace(
+            logging.trace(
                 f"Failed to parse the metadata on the chain for hotkey {hotkey}."
             )
             return None

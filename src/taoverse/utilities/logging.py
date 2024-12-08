@@ -43,7 +43,7 @@ class ColorFormatter(logging.Formatter):
         # Center the level name and specify the field width of 7 characters to match the longest level name ("WARNING").
         level_str = f"{record.levelname:^7}"
         return logging.Formatter(
-            f"{Fore.BLUE}{time_str}{Fore.RESET} | {Style.BRIGHT}{ColorFormatter._LEVEL_TO_COLOR.get(record.levelno, Fore.RESET)}{level_str}{Fore.RESET} | %(message)s",
+            f"{Fore.BLUE}{time_str}{Fore.RESET} | {Style.BRIGHT}{ColorFormatter._LEVEL_TO_COLOR.get(record.levelno, Fore.RESET)}{level_str}{Fore.RESET}{Style.RESET_ALL} | %(message)s",
         ).format(record)
 
 
@@ -67,9 +67,10 @@ def _initialize_once() -> None:
 
 _initialize_once()
 
+
 def reinitialize() -> None:
     """Reinitializes the logger and handlers.
-    
+
     Bittensor <= 8.5.0 currently deletes all other loggers handlers so this should be called after the bt logger has been imported / initialized.
     """
     global _LOGGER

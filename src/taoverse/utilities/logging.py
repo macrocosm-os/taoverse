@@ -1,7 +1,6 @@
 import functools
 import logging
 import sys
-import threading
 import time
 from logging import DEBUG, ERROR, INFO, WARNING
 
@@ -49,25 +48,44 @@ class ColorFormatter(logging.Formatter):
 
 
 _LOGGER = None
-_lock = threading.Lock()
 _handler = None
 
 
 def _initialize_once() -> None:
     global _LOGGER
     global _handler
-    with _lock:
-        if _LOGGER is None:
-            _LOGGER = logging.getLogger("taoverse")
-            _LOGGER.setLevel(INFO)
 
-            _handler = logging.StreamHandler()
-            _handler.setStream(sys.stdout)
-            _handler.setFormatter(ColorFormatter())
-            _LOGGER.addHandler(_handler)
+    if _LOGGER is None:
+        _LOGGER = logging.getLogger("taoverse")
+        _LOGGER.setLevel(INFO)
+
+        _handler = logging.StreamHandler()
+        _handler.setStream(sys.stdout)
+        _handler.setFormatter(ColorFormatter())
+        _LOGGER.addHandler(_handler)
 
 
 _initialize_once()
+
+def reinitialize() -> None:
+    """Reinitializes the logger and handlers.
+    
+    Bittensor <= 8.5.0 currently deletes all other loggers handlers so this should be called after the bt logger has been imported / initialized.
+    """
+    global _LOGGER
+    global _handler
+
+    _LOGGER = _LOGGER or logging.getLogger("taoverse")
+    _LOGGER.setLevel(INFO)
+
+    for handler in _LOGGER.handlers[:]:
+        _LOGGER.removeHandler(handler)
+        handler.close()
+
+    _handler = logging.StreamHandler()
+    _handler.setStream(sys.stdout)
+    _handler.setFormatter(ColorFormatter())
+    _LOGGER.addHandler(_handler)
 
 
 def set_verbosity(verbosity: int) -> None:

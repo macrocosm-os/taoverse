@@ -4,8 +4,7 @@ import threading
 from collections import defaultdict
 from typing import Dict, List, Optional, Set
 
-import bittensor as bt
-
+import taoverse.utilities.logging as logging
 from taoverse.model.data import EvalResult, ModelMetadata
 
 
@@ -113,7 +112,7 @@ class ModelTracker:
             for hotkey in existing_hotkeys - incoming_hotkeys:
                 del self.miner_hotkey_to_model_metadata_dict[hotkey]
                 del self.miner_hotkey_to_eval_results[hotkey]
-                bt.logging.trace(f"Removed outdated hotkey: {hotkey} from ModelTracker")
+                logging.trace(f"Removed outdated hotkey: {hotkey} from ModelTracker")
 
     def on_miner_model_updated(
         self,
@@ -135,7 +134,7 @@ class ModelTracker:
             if prev_metadata != model_metadata:
                 self.miner_hotkey_to_eval_results[hotkey].clear()
 
-            bt.logging.trace(f"Updated Miner {hotkey}. ModelMetadata={model_metadata}.")
+            logging.trace(f"Updated Miner {hotkey}. ModelMetadata={model_metadata}.")
 
     def on_model_evaluated(self, hotkey: str, competition_id: int, result: EvalResult) -> None:
         """Notifies the tracker that a model has been evaluated.
@@ -154,4 +153,4 @@ class ModelTracker:
                 eval_results.pop(0)
             self.miner_hotkey_to_eval_results[hotkey][competition_id] = eval_results
 
-            bt.logging.trace(f"Updated eval results on {hotkey} for comp {competition_id}. EvalResult={result}.")
+            logging.trace(f"Updated eval results on {hotkey} for comp {competition_id}. EvalResult={result}.")

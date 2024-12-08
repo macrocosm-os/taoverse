@@ -1,8 +1,7 @@
 import statistics
-from typing import Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
-import bittensor as bt
-
+import taoverse.utilities.logging as logging
 from taoverse.model.competition import utils as competition_utils
 from taoverse.model.competition.data import Competition, ModelConstraints
 from taoverse.model.data import Model, ModelMetadata
@@ -41,7 +40,7 @@ class ModelUpdater:
         model: Model, model_constraints: ModelConstraints
     ) -> bool:
         if not model_constraints:
-            bt.logging.trace(f"No competition found for {model.id.competition_id}")
+            logging.trace(f"No competition found for {model.id.competition_id}")
             return False
 
         # Check that the parameter count of the model is within allowed bounds.
@@ -51,14 +50,14 @@ class ModelUpdater:
             parameter_size > model_constraints.max_model_parameter_size
             or parameter_size < model_constraints.min_model_parameter_size
         ):
-            bt.logging.debug(
+            logging.debug(
                 f"Model {model.id.name} does not satisfy constraints for competition {model.id.competition_id}"
             )
-            bt.logging.debug(f"Number of model parameters is {parameter_size}")
-            bt.logging.debug(
+            logging.debug(f"Number of model parameters is {parameter_size}")
+            logging.debug(
                 f"Max parameters allowed is {model_constraints.max_model_parameter_size}"
             )
-            bt.logging.debug(
+            logging.debug(
                 f"Min parameters allowed is {model_constraints.min_model_parameter_size}"
             )
             return False
@@ -120,7 +119,7 @@ class ModelUpdater:
         # Check that the metadata is old enough to meet the eval_block_delay for the competition.
         # If not we return false and will check again next time we go through the update loop.
         if curr_block - metadata.block < competition.constraints.eval_block_delay:
-            bt.logging.debug(
+            logging.debug(
                 f"""Sync for hotkey {hotkey} delayed as the current block: {curr_block} is not at least 
                 {competition.constraints.eval_block_delay} blocks after the upload block: {metadata.block}. 
                 Will automatically retry later."""

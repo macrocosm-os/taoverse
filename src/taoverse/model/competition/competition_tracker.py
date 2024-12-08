@@ -1,8 +1,8 @@
 import typing
 
-import bittensor as bt
 import torch
 
+import taoverse.utilities.logging as logging
 from taoverse.model.competition.data import Competition
 
 
@@ -118,7 +118,7 @@ class CompetitionTracker:
             new_num_neurons >= self.num_neurons
         ), f"Tried to downsize the number of neurons from {self.num_neurons} to {new_num_neurons}"
 
-        bt.logging.trace(
+        logging.trace(
             f"Resizing CompetitionTracker from {self.num_neurons} to {new_num_neurons}"
         )
 

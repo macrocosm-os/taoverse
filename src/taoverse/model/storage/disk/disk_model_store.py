@@ -3,9 +3,9 @@ import traceback
 from pathlib import Path
 from typing import Any, Dict
 
-import bittensor as bt
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
+import taoverse.utilities.logging as logging
 from taoverse.model.data import Model, ModelId
 from taoverse.model.storage.disk import utils
 from taoverse.model.storage.local_model_store import LocalModelStore
@@ -108,7 +108,7 @@ class DiskModelStore(LocalModelStore):
                         hotkey_path, grace_period_seconds
                     )
                     if deleted_hotkey:
-                        bt.logging.trace(
+                        logging.trace(
                             f"Removed directory for unreferenced hotkey: {hotkey}."
                         )
 
@@ -140,9 +140,9 @@ class DiskModelStore(LocalModelStore):
                                         commit_path, grace_period_seconds
                                     )
                                     if deleted_model:
-                                        bt.logging.trace(
+                                        logging.trace(
                                             f"Removing directory for unreferenced model at: {commit_path}."
                                         )
             except Exception:
                 # Catch the exception so we continue with the rest of the cleanup.
-                bt.logging.warning(traceback.format_exc())
+                logging.warning(traceback.format_exc())

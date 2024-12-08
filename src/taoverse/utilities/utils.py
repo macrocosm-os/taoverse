@@ -1,14 +1,14 @@
 import concurrent
 import dataclasses
-from datetime import datetime, timedelta
 import functools
 import hashlib
 import multiprocessing
 import os
 import random
+from datetime import datetime, timedelta
 from typing import Any, Optional, Sequence
 
-import bittensor as bt
+import taoverse.utilities.logging as logging
 
 
 def _wrapped_func(func: functools.partial, queue: multiprocessing.Queue):
@@ -73,12 +73,12 @@ def run_in_thread(func: functools.partial, ttl: int, name=None) -> Any:
         future = executor.submit(func)
         return future.result(timeout=ttl)
     except concurrent.futures.TimeoutError as e:
-        bt.logging.error(f"Failed to complete '{name}' within {ttl} seconds.")
+        logging.error(f"Failed to complete '{name}' within {ttl} seconds.")
         raise TimeoutError(f"Failed to complete '{name}' within {ttl} seconds.") from e
     finally:
-        bt.logging.trace(f"Completed {name}")
+        logging.trace(f"Completed {name}")
         executor.shutdown(wait=False)
-        bt.logging.trace(f"{name} cleaned up successfully")
+        logging.trace(f"{name} cleaned up successfully")
 
 
 def get_version(filepath: str) -> Optional[int]:

@@ -78,9 +78,7 @@ def run_in_thread(func: functools.partial, ttl: int, name=None) -> Any:
         logging.error(f"Failed to complete '{name}' within {ttl} seconds.")
         raise TimeoutError(f"Failed to complete '{name}' within {ttl} seconds.") from e
     finally:
-        logging.trace(f"Completed {name}")
         executor.shutdown(wait=False)
-        logging.trace(f"{name} cleaned up successfully")
 
 
 def get_version(filepath: str) -> Optional[int]:

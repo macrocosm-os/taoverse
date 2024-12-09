@@ -8,6 +8,8 @@ import random
 from datetime import datetime, timedelta
 from typing import Any, Optional, Sequence
 
+import bittensor as bt
+
 import taoverse.utilities.logging as logging
 
 
@@ -126,12 +128,24 @@ def random_date(start: datetime, end: datetime, seed: int = None) -> datetime:
     # Add the random seconds to the start time
     return start + timedelta(seconds=random_seconds)
 
+
 def fingerprint(any: "Sequence[DataclassInstance] | DataclassInstance") -> int:
     """Returns a fingerprint for a Dataclass or sequence of Dataclasses."""
-    
+
     # Convert the dataclass to a string representation of the values
     if isinstance(any, Sequence):
-        data_string = str([dataclasses.asdict(x) for x in any]).encode('utf-8')
+        data_string = str([dataclasses.asdict(x) for x in any]).encode("utf-8")
     else:
-        data_string = str(dataclasses.asdict(any)).encode('utf-8')
+        data_string = str(dataclasses.asdict(any)).encode("utf-8")
     return hashlib.sha256(data_string).hexdigest()
+
+
+def configure_logging(config: bt.config) -> None:
+    """Configures the Taoverse logger from a bittensor config."""
+
+    if hasattr(config, "trace") and config.trace:
+        logging.set_verbosity_trace()
+    elif hasattr(config, "debug") and config.debug:
+        logging.set_verbosity_debug()
+    else:
+        logging.set_verbosity_info()

@@ -143,9 +143,10 @@ def fingerprint(any: "Sequence[DataclassInstance] | DataclassInstance") -> int:
 def configure_logging(config: bt.config) -> None:
     """Configures the Taoverse logger from a bittensor config."""
 
-    if hasattr(config, "trace") and config.trace:
+    logging_config = getattr(config, "logging", None)
+    if logging_config and logging_config.trace:
         logging.set_verbosity_trace()
-    elif hasattr(config, "debug") and config.debug:
+    elif logging_config and logging_config.debug:
         logging.set_verbosity_debug()
     else:
         logging.set_verbosity_info()

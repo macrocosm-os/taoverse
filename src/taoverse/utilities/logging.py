@@ -1,7 +1,6 @@
 import functools
 import logging
 import sys
-import threading
 import time
 from logging import DEBUG, ERROR, INFO, WARNING
 
@@ -44,30 +43,50 @@ class ColorFormatter(logging.Formatter):
         # Center the level name and specify the field width of 7 characters to match the longest level name ("WARNING").
         level_str = f"{record.levelname:^7}"
         return logging.Formatter(
-            f"{Fore.BLUE}{time_str}{Fore.RESET} | {Style.BRIGHT}{ColorFormatter._LEVEL_TO_COLOR.get(record.levelno, Fore.RESET)}{level_str}{Fore.RESET} | %(message)s",
+            f"{Fore.BLUE}{time_str}{Fore.RESET} | {Style.BRIGHT}{ColorFormatter._LEVEL_TO_COLOR.get(record.levelno, Fore.RESET)}{level_str}{Fore.RESET}{Style.RESET_ALL} | %(message)s",
         ).format(record)
 
 
 _LOGGER = None
-_lock = threading.Lock()
 _handler = None
 
 
 def _initialize_once() -> None:
     global _LOGGER
     global _handler
-    with _lock:
-        if _LOGGER is None:
-            _LOGGER = logging.getLogger("taoverse")
-            _LOGGER.setLevel(INFO)
 
-            _handler = logging.StreamHandler()
-            _handler.setStream(sys.stdout)
-            _handler.setFormatter(ColorFormatter())
-            _LOGGER.addHandler(_handler)
+    if _LOGGER is None:
+        _LOGGER = logging.getLogger("taoverse")
+        _LOGGER.setLevel(INFO)
+
+        _handler = logging.StreamHandler()
+        _handler.setStream(sys.stdout)
+        _handler.setFormatter(ColorFormatter())
+        _LOGGER.addHandler(_handler)
 
 
 _initialize_once()
+
+
+def reinitialize() -> None:
+    """Reinitializes the logger and handlers.
+
+    Bittensor <= 8.5.0 currently deletes all other loggers handlers so this should be called after the bt logger has been imported / initialized.
+    """
+    global _LOGGER
+    global _handler
+
+    _LOGGER = _LOGGER or logging.getLogger("taoverse")
+    _LOGGER.setLevel(INFO)
+
+    for handler in _LOGGER.handlers[:]:
+        _LOGGER.removeHandler(handler)
+        handler.close()
+
+    _handler = logging.StreamHandler()
+    _handler.setStream(sys.stdout)
+    _handler.setFormatter(ColorFormatter())
+    _LOGGER.addHandler(_handler)
 
 
 def set_verbosity(verbosity: int) -> None:

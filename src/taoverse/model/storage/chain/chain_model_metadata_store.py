@@ -31,6 +31,7 @@ class ChainModelMetadataStore(ModelMetadataStore):
         model_id: ModelId,
         wait_for_inclusion: bool = True,
         wait_for_finalization: bool = True,
+        ttl: int = 60,
     ):
         """Stores model metadata on this subnet for a specific wallet."""
         if self.wallet is None:
@@ -49,9 +50,11 @@ class ChainModelMetadataStore(ModelMetadataStore):
             wait_for_inclusion,
             wait_for_finalization,
         )
-        utils.run_in_thread(partial, 30)
+        utils.run_in_thread(partial, ttl)
 
-    async def retrieve_model_metadata(self, hotkey: str) -> Optional[ModelMetadata]:
+    async def retrieve_model_metadata(
+        self, hotkey: str, ttl: int = 60
+    ) -> Optional[ModelMetadata]:
         """Retrieves model metadata on this subnet for specific hotkey"""
 
         # Wrap calls to the subtensor in a thread with a timeout to handle potential hangs.
@@ -61,7 +64,7 @@ class ChainModelMetadataStore(ModelMetadataStore):
             self.subnet_uid,
             hotkey,
         )
-        metadata = utils.run_in_thread(partial, 30)
+        metadata = utils.run_in_thread(partial, ttl)
 
         if not metadata:
             return None

@@ -46,19 +46,19 @@ class PerfMonitor:
 
     def min(self) -> float:
         """Returns the minimum duration recorded by the tracker in seconds."""
-        return self._ns_to_s(np.min(self.samples))
+        return self._ns_to_s(np.min(self.samples)) if self.samples else 0.0
 
     def max(self) -> float:
         """Returns the maximum duration recorded by the tracker in seconds."""
-        return self._ns_to_s(np.max(self.samples))
+        return self._ns_to_s(np.max(self.samples)) if self.samples else 0.0
 
     def median(self) -> float:
         """Returns the median duration recorded by the tracker in seconds."""
-        return self._ns_to_s(np.median(self.samples))
+        return self._ns_to_s(np.median(self.samples)) if self.samples else 0.0
 
     def percentile(self, p: float) -> float:
         """Returns the pth percentile duration recorded by the tracker in seconds."""
-        return self._ns_to_s(np.percentile(self.samples, p))
+        return self._ns_to_s(np.percentile(self.samples, p)) if self.samples else 0.0
 
     def summary_str(self) -> str:
         """Returns a string summarizing the performance of the tracked operation."""

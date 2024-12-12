@@ -71,6 +71,15 @@ class TestPerfMonitor(unittest.TestCase):
         """Performs basic validation of the name method."""
         tracker = PerfMonitor("TestName")
         self.assertEqual(tracker.name(), "TestName")
+        
+    def test_perf_monitor_no_samples(self):
+        """Verifies that a PerfMonitor with no samples returns 0 for all values"""
+        tracker = PerfMonitor("TestNoSamples")
+        self.assertEqual(tracker.min(), 0)
+        self.assertEqual(tracker.max(), 0)
+        self.assertEqual(tracker.median(), 0)
+        self.assertEqual(tracker.percentile(90), 0)
+        self.assertEqual(tracker.summary_str(), "TestNoSamples performance: N=0")
 
 
 if __name__ == "__main__":

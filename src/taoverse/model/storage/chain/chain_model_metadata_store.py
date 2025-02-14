@@ -53,26 +53,30 @@ class ChainModelMetadataStore(ModelMetadataStore):
         utils.run_in_thread(partial, ttl)
 
     async def retrieve_model_metadata(
-        self, hotkey: str, ttl: int = 60
+        self, uid: int, hotkey: str, ttl: int = 60
     ) -> Optional[ModelMetadata]:
         """Retrieves model metadata on this subnet for specific hotkey"""
 
         # Wrap calls to the subtensor in a thread with a timeout to handle potential hangs.
-        partial = functools.partial(
+        metadata_partial = functools.partial(
             bt.core.extrinsics.serving.get_metadata,
             self.subtensor,
             self.subnet_uid,
             hotkey,
         )
-        metadata = utils.run_in_thread(partial, ttl)
+
+        commitment_partial = functools.partial(
+            self.subtensor.get_commitment,
+            self.subnet_uid,
+            uid,
+        )
+
+        metadata = utils.run_in_thread(metadata_partial, ttl)
 
         if not metadata:
             return None
 
-        commitment = metadata["info"]["fields"][0]
-        hex_data = commitment[list(commitment.keys())[0]][2:]
-
-        chain_str = bytes.fromhex(hex_data).decode()
+        chain_str = utils.run_in_thread(commitment_partial, ttl)
 
         model_id = None
 
@@ -146,6 +150,7 @@ async def test_retrieve_model_metadata():
     # Uses .env configured hotkey/uid for the test.
     net_uid = int(os.getenv("TEST_SUBNET_UID"))
     hotkey_address = os.getenv("TEST_HOTKEY_ADDRESS")
+    model_uid = int(os.getenv("TEST_MODEL_UID"))
 
     # Do not require a wallet for retrieving data.
     metadata_store = ChainModelMetadataStore(
@@ -155,7 +160,7 @@ async def test_retrieve_model_metadata():
     )
 
     # Retrieve the metadata from the chain.
-    model_metadata = await metadata_store.retrieve_model_metadata(hotkey_address)
+    model_metadata = await metadata_store.retrieve_model_metadata(model_uid, hotkey_address)
 
     print(f"Expecting matching model id: {expected_model_id == model_metadata.id}")
 
@@ -179,6 +184,7 @@ async def test_roundtrip_model_metadata():
     coldkey = os.getenv("TEST_COLDKEY")
     hotkey = os.getenv("TEST_HOTKEY")
     net_uid = int(os.getenv("TEST_SUBNET_UID"))
+    model_uid = int(os.getenv("TEST_MODEL_UID"))
 
     wallet = bt.wallet(name=coldkey, hotkey=hotkey)
 
@@ -197,7 +203,7 @@ async def test_roundtrip_model_metadata():
     )
 
     # Retrieve the metadata from the chain.
-    model_metadata = await metadata_store.retrieve_model_metadata(hotkey)
+    model_metadata = await metadata_store.retrieve_model_metadata(model_uid, hotkey)
 
     print(f"Expecting matching metadata: {model_id == model_metadata.id}")
 

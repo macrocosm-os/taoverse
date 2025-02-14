@@ -77,12 +77,13 @@ class ModelUpdater:
 
         return True
 
-    async def _get_metadata(self, hotkey: str) -> Optional[ModelMetadata]:
-        """Get metadata about a model by hotkey"""
-        return await self.metadata_store.retrieve_model_metadata(hotkey)
+    async def _get_metadata(self, uid: int, hotkey: str) -> Optional[ModelMetadata]:
+        """Get metadata about a model by uid and hotkey"""
+        return await self.metadata_store.retrieve_model_metadata(uid, hotkey)
 
     async def sync_model(
         self,
+        uid: int,
         hotkey: str,
         curr_block: int,
         schedule_by_block: List[Tuple[int, List[Competition]]],
@@ -91,13 +92,14 @@ class ModelUpdater:
         """Updates local model for a hotkey if out of sync and returns if it was updated."
 
         Args:
+           uid (int): The UID of the model to sync.
            hotkey (str): The hotkey of the model to sync.
            curr_block (int): The current block.
            force (bool): Whether to force a sync for this model, even if it's chain metadata hasn't changed.
            schedule_by_block (List[Tuple[int, List[Competition]]]): Which competitions are being run at a given block.
         """
         # Get the metadata for the miner.
-        metadata = await self._get_metadata(hotkey)
+        metadata = await self._get_metadata(uid, hotkey)
 
         if not metadata:
             raise MinerMisconfiguredError(
@@ -120,8 +122,8 @@ class ModelUpdater:
         # If not we return false and will check again next time we go through the update loop.
         if curr_block - metadata.block < competition.constraints.eval_block_delay:
             logging.debug(
-                f"""Sync for hotkey {hotkey} delayed as the current block: {curr_block} is not at least 
-                {competition.constraints.eval_block_delay} blocks after the upload block: {metadata.block}. 
+                f"""Sync for hotkey {hotkey} delayed as the current block: {curr_block} is not at least
+                {competition.constraints.eval_block_delay} blocks after the upload block: {metadata.block}.
                 Will automatically retry later."""
             )
             return False

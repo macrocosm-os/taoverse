@@ -39,18 +39,15 @@ class ChainModelMetadataStore(ModelMetadataStore):
 
         data = model_id.to_compressed_str()
 
-        # Wrap calls to the subtensor in a thread with a timeout to handle potential hangs.
-        partial = functools.partial(
-            bt.core.extrinsics.serving.publish_metadata,
-            self.subtensor,
+        commit_partial = functools.partial(
+            self.subtensor.commit,
             self.wallet,
             self.subnet_uid,
-            f"Raw{len(data)}",
-            data.encode(),
-            wait_for_inclusion,
-            wait_for_finalization,
+            data,
         )
-        utils.run_in_thread(partial, ttl)
+
+
+        utils.run_in_thread(commit_partial, ttl)
 
     async def retrieve_model_metadata(
         self, uid: int, hotkey: str, ttl: int = 60

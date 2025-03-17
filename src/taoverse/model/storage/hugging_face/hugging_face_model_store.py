@@ -6,8 +6,9 @@ from typing import Optional
 import bittensor as bt
 from huggingface_hub import HfApi
 from huggingface_hub.utils import RepositoryNotFoundError
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoTokenizer
 
+from taoverse.model.auto import AutoModel
 from taoverse.model.competition.data import ModelConstraints
 from taoverse.model.data import Model, ModelId
 from taoverse.model.model_updater import MinerMisconfiguredError
@@ -70,6 +71,7 @@ class HuggingFaceModelStore(RemoteModelStore):
         model_constraints: ModelConstraints,
     ) -> Model:
         """Retrieves a trained model from Hugging Face."""
+
         if not model_id.commit:
             raise ValueError("No Hugging Face commit id found to read from the hub.")
 
@@ -101,7 +103,7 @@ class HuggingFaceModelStore(RemoteModelStore):
 
         # Transformers library can pick up a model based on the hugging face path (username/model) + rev.
         try:
-            model = AutoModelForCausalLM.from_pretrained(
+            model = AutoModel.from_pretrained(
                 pretrained_model_name_or_path=repo_id,
                 revision=model_id.commit,
                 cache_dir=local_path,

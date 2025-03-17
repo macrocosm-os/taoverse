@@ -3,7 +3,7 @@ import json
 
 import torch.nn as nn
 from huggingface_hub import HfApi
-        
+
 class PreTrainedModel:
     """This is a base class that provide some common functionalities
     to Taover models such as pushing to HF hub, etc.
@@ -29,7 +29,7 @@ class PreTrainedModel:
         """
 
         api = HfApi()
-        
+
         # Create repo if not existing yet
         api.create_repo(repo_id, exist_ok=True)
 
@@ -39,7 +39,7 @@ class PreTrainedModel:
                                         folder_path=self.model_local_path)
 
         return commit_info
-    
+
     @classmethod
     def parse_config(cls, model_local_path: str):
         """Parse the model config file
@@ -68,5 +68,3 @@ class PreTrainedModel:
 
         self.model.eval(*args, **kwargs)
         return self
-    
-    

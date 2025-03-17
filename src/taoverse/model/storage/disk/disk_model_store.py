@@ -3,9 +3,10 @@ import traceback
 from pathlib import Path
 from typing import Any, Dict
 
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoTokenizer
 
 import taoverse.utilities.logging as logging
+from taoverse.model.auto import AutoModel
 from taoverse.model.data import Model, ModelId
 from taoverse.model.storage.disk import utils
 from taoverse.model.storage.local_model_store import LocalModelStore
@@ -56,7 +57,7 @@ class DiskModelStore(LocalModelStore):
             self.base_dir, hotkey, model_id
         )
 
-        model = AutoModelForCausalLM.from_pretrained(
+        model = AutoModel.from_pretrained(
             pretrained_model_name_or_path=pretrained_model_name_or_path,
             revision=model_id.commit,
             local_files_only=True,

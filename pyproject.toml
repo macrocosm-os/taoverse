@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "taoverse"
-version = "1.4.1"
+version = "2.0.0"
 authors = [
   { name="Taoverse" },
 ]
@@ -19,6 +19,11 @@ dependencies = [
     "safetensors",
     "torch",
     "transformers",
+    "x_transformers == 2.1.5",
+    "librosa == 0.10.2.post1",
+    "torchdiffeq == 0.2.5",
+    "jieba == 0.42.1",
+    "pypinyin == 0.53.0",
     "wandb",
 ]
 classifiers = [

@@ -112,12 +112,26 @@ class ModelUpdater:
             block=metadata.block,
             schedule_by_block=schedule_by_block,
         )
+
         if not competition:
             raise MinerMisconfiguredError(
                 hotkey,
-                f"No competition found for {metadata.id.competition_id} at block {metadata.block}",
+                f"No competition found for {metadata.id.competition_id} at the upload block {metadata.block}",
             )
 
+        # Check that the metadata indicates a competition available at current block.
+        competition = competition_utils.get_competition_for_block(
+            comp_id=metadata.id.competition_id,
+            block=curr_block,
+            schedule_by_block=schedule_by_block,
+        )
+
+        if not competition:
+            raise MinerMisconfiguredError(
+                hotkey,
+                f"No competition found for {metadata.id.competition_id} at current block {curr_block}",
+            )
+        
         # Check that the metadata is old enough to meet the eval_block_delay for the competition.
         # If not we return false and will check again next time we go through the update loop.
         if curr_block - metadata.block < competition.constraints.eval_block_delay:

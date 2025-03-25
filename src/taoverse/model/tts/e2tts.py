@@ -95,17 +95,20 @@ class E2TTS(PreTrainedModel):
     def sample(self,
                ref_audio: torch.tensor,
                text: List[str],
-               gen_duration: int
+               gen_duration: int,
+               seed: int = None
                ):
-
-
+        """
+        Generate audio from the model
+        """
         generated_wave, _ =  self.model.sample(
             cond=ref_audio,
             text=text,
             duration=gen_duration,
             steps=self.config['sampling']['nfe_step'],
             cfg_strength=self.config['sampling']['cfg_strength'],
-            sway_sampling_coef=self.config['sampling']['sway_sampling_coef']
+            sway_sampling_coef=self.config['sampling']['sway_sampling_coef'],
+            seed=seed
         )
 
 

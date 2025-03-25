@@ -185,6 +185,8 @@ class CFM(nn.Module):
         y0 = []
         for dur in duration:
             if exists(seed):
+                # ensure seed does not exceed `int` range of 32 bytes
+                seed = seed % (1 << 32) 
                 torch.manual_seed(seed)
             y0.append(torch.randn(dur, self.num_channels, device=self.device, dtype=step_cond.dtype))
         y0 = pad_sequence(y0, padding_value=0, batch_first=True)
